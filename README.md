@@ -261,6 +261,8 @@ def generate_report(report_type, filters):
 | mattermost_server_url | WPM_MATTERMOST_SERVER_URL | - | Mattermost服务器URL |
 | mattermost_token | WPM_MATTERMOST_TOKEN | - | Mattermost访问令牌 |
 | mattermost_channel_id | WPM_MATTERMOST_CHANNEL_ID | - | Mattermost频道ID |
+| url_blacklist | WPM_URL_BLACKLIST | [] | URL黑名单（逗号分隔，支持正则） |
+| enable_url_blacklist | WPM_ENABLE_URL_BLACKLIST | true | 启用URL黑名单功能 |
 | log_level | WPM_LOG_LEVEL | INFO | 日志级别 |
 
 ### 配置示例
@@ -310,6 +312,97 @@ config = Config(
     log_level="WARNING"
 )
 ```
+
+## � UR功L黑名单功能
+
+### 永久屏蔽无法优化的接口
+
+在实际生产环境中，某些业务接口由于历史原因或复杂性无法快速优化，可以使用URL黑名单功能永久屏蔽告警。
+
+#### 基本配置
+
+```python
+from web_performance_monitor import Config, PerformanceMonitor
+
+config = Config(
+    threshold_seconds=1.0,
+    url_blacklist=[
+        '/api/legacy/.*',           # 遗留API（正则匹配）
+        '/health',                  # 健康检查（精确匹配）
+        '.*\\.(jpg|png|gif)$',     # 图片资源（正则匹配）
+        '/api/slow-report/.*'       # 已知慢接口
+    ],
+    enable_url_blacklist=True
+)
+
+monitor = PerformanceMonitor(config)
+```
+
+#### 环境变量配置
+
+```bash
+# 多个URL用逗号分隔，支持正则表达式
+export WPM_URL_BLACKLIST="/api/legacy/.*,/health,/metrics,.*\\.(css|js)$"
+export WPM_ENABLE_URL_BLACKLIST="true"
+```
+
+#### 动态管理黑名单
+
+```python
+# 添加黑名单规则
+config.add_blacklist_url('/api/temp/.*')
+
+# 移除黑名单规则
+config.remove_blacklist_url('/api/temp/.*')
+
+# 检查URL是否被屏蔽
+is_blocked = config.is_url_blacklisted('/api/legacy/old-function')
+```
+
+#### 常用黑名单模式
+
+```python
+# 生产环境推荐配置
+url_blacklist = [
+    # 遗留系统接口
+    '/api/legacy/.*',
+    '/api/v1/old/.*',
+    
+    # 系统监控接口
+    '/health',
+    '/metrics',
+    '/status',
+    '/ping',
+    
+    # 静态资源
+    '.*\\.(jpg|png|gif|ico|svg)$',
+    '.*\\.(css|js|woff|ttf|eot)$',
+    
+    # 管理员接口（已知较慢）
+    '/admin/.*',
+    '/management/.*',
+    
+    # 报告和导出接口（业务需要，已知较慢）
+    '/api/reports/generate/.*',
+    '/api/export/.*',
+    '/api/download/.*',
+    
+    # 第三方回调接口
+    '/webhook/.*',
+    '/callback/.*',
+    
+    # 调试和开发接口
+    '/debug/.*',
+    '/dev/.*'
+]
+```
+
+#### 黑名单匹配逻辑
+
+- 支持**正则表达式**匹配，提供强大的模式匹配能力
+- 同时检查**完整URL**和**端点路径**
+- 匹配成功的请求会跳过告警，但仍会被监控统计
+- 自动验证正则表达式有效性，无效模式会被忽略
 
 ## 🔧 高级功能
 

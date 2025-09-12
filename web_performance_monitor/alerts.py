@@ -43,7 +43,8 @@ class AlertManager:
         
         检查：
         1. 响应时间是否超过配置阈值（默认1秒）
-        2. 同一接口在时间窗口内（默认10天）是否已告警
+        2. URL是否在黑名单中
+        3. 同一接口在时间窗口内（默认10天）是否已告警
         
         Args:
             metrics: 性能指标数据
@@ -59,7 +60,23 @@ class AlertManager:
                 )
                 return False
             
-            # 2. 检查是否重复告警
+            # 2. 检查URL是否在黑名单中
+            if self.config.is_url_blacklisted(metrics.request_url):
+                self.logger.info(
+                    f"跳过黑名单URL告警: {metrics.endpoint} "
+                    f"URL={metrics.request_url} 匹配黑名单规则"
+                )
+                return False
+            
+            # 检查endpoint是否在黑名单中（支持endpoint路径匹配）
+            if self.config.is_url_blacklisted(metrics.endpoint):
+                self.logger.info(
+                    f"跳过黑名单端点告警: {metrics.endpoint} "
+                    f"端点匹配黑名单规则"
+                )
+                return False
+            
+            # 3. 检查是否重复告警
             cache_key = self.cache_manager.generate_metrics_key(metrics)
             
             if self.cache_manager.is_recently_alerted(cache_key, self.config.alert_window_days):

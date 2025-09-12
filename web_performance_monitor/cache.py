@@ -18,9 +18,15 @@ class CacheManager:
     管理告警历史缓存，防止重复告警
     """
     
-    def __init__(self):
+    def __init__(self, max_entries: int = 10000):
+        """初始化缓存管理器
+        
+        Args:
+            max_entries: 最大缓存条目数，防止内存无限增长
+        """
         self._cache: Dict[str, CacheEntry] = {}
         self._lock = threading.RLock()  # 线程安全
+        self._max_entries = max_entries
         self.logger = logging.getLogger(__name__)
     
     def is_recently_alerted(self, key: str, window_days: int = 10) -> bool:
@@ -62,6 +68,13 @@ class CacheManager:
         """
         with self._lock:
             try:
+                # 检查是否超过最大条目数
+                if len(self._cache) >= self._max_entries:
+                    # 清理最旧的条目（清理10%的条目）
+                    cleanup_count = max(1, self._max_entries // 10)
+                    self._cleanup_oldest_entries(cleanup_count)
+                    self.logger.info(f"缓存条目达到上限，清理了 {cleanup_count} 个最旧条目")
+                
                 entry = CacheEntry(
                     key=key,
                     timestamp=datetime.now(),
@@ -180,8 +193,14 @@ class CacheManager:
                     if age <= timedelta(days=7):
                         recent_7d += 1
                 
+                # 获取大小信息
+                size_info = self.get_cache_size_info()
+                
                 return {
                     'total_entries': total_entries,
+                    'max_entries': self._max_entries,
+                    'usage_percentage': size_info['usage_percentage'],
+                    'available_slots': size_info['available_slots'],
                     'recent_1h': recent_1h,
                     'recent_24h': recent_24h,
                     'recent_7d': recent_7d,
@@ -258,6 +277,52 @@ class CacheManager:
             except Exception as e:
                 self.logger.error(f"删除缓存条目失败: {e}")
                 return False
+    
+    def _cleanup_oldest_entries(self, count: int) -> int:
+        """清理最旧的缓存条目
+        
+        Args:
+            count: 要清理的条目数量
+            
+        Returns:
+            int: 实际清理的条目数量
+        """
+        try:
+            if not self._cache:
+                return 0
+            
+            # 按时间戳排序，获取最旧的条目
+            sorted_entries = sorted(
+                self._cache.items(),
+                key=lambda x: x[1].timestamp
+            )
+            
+            # 删除最旧的条目
+            cleanup_count = min(count, len(sorted_entries))
+            for i in range(cleanup_count):
+                key = sorted_entries[i][0]
+                del self._cache[key]
+            
+            self.logger.debug(f"清理了 {cleanup_count} 个最旧的缓存条目")
+            return cleanup_count
+            
+        except Exception as e:
+            self.logger.error(f"清理最旧条目失败: {e}")
+            return 0
+    
+    def get_cache_size_info(self) -> Dict[str, Any]:
+        """获取缓存大小信息
+        
+        Returns:
+            Dict[str, Any]: 缓存大小信息
+        """
+        with self._lock:
+            return {
+                'current_entries': len(self._cache),
+                'max_entries': self._max_entries,
+                'usage_percentage': (len(self._cache) / self._max_entries) * 100,
+                'available_slots': self._max_entries - len(self._cache)
+            }
     
     def get_entry(self, key: str) -> Optional[CacheEntry]:
         """获取指定的缓存条目

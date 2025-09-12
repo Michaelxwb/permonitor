@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "web-performance-monitor"
-version = "1.1.3"
+version = "1.1.4"
 description = "基于pyinstrument的Flask应用性能监控和告警工具"
 readme = "README.md"
 license = {text = "MIT"}

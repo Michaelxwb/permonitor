@@ -1,0 +1,152 @@
+[build-system]
+requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "web-performance-monitor"
+version = "1.1.3"
+description = "基于pyinstrument的Flask应用性能监控和告警工具"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Jahan", email = "ambition_xu@163.com"}
+]
+maintainers = [
+    {name = "Jahan", email = "ambition_xu@163.com"}
+]
+keywords = ["flask", "performance", "monitoring", "profiling", "alerts", "pyinstrument"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Framework :: Flask",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Monitoring",
+    "Topic :: Software Development :: Quality Assurance",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Middleware",
+]
+requires-python = ">=3.7"
+dependencies = [
+    "pyinstrument>=4.0.0",
+    "flask>=2.0.0",
+    "requests>=2.25.0",
+]
+
+[project.optional-dependencies]
+mattermost = ["mattermostdriver>=7.0.0"]
+dev = [
+    "pytest>=6.0.0",
+    "pytest-mock>=3.0.0",
+    "pytest-cov>=2.0.0",
+    "flask-testing>=0.8.0",
+    "black>=22.0.0",
+    "flake8>=4.0.0",
+    "mypy>=0.950",
+]
+all = [
+    "mattermostdriver>=7.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/web-performance-monitor"
+Documentation = "https://github.com/example/web-performance-monitor#readme"
+Repository = "https://github.com/example/web-performance-monitor.git"
+"Bug Tracker" = "https://github.com/example/web-performance-monitor/issues"
+Changelog = "https://github.com/example/web-performance-monitor/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["web_performance_monitor*"]
+exclude = ["tests*", "examples*"]
+
+[tool.setuptools.package-data]
+web_performance_monitor = ["py.typed"]
+
+# Black代码格式化配置
+[tool.black]
+line-length = 88
+target-version = ['py37', 'py38', 'py39', 'py310', 'py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# pytest配置
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers --strict-config"
+testpaths = [
+    "tests",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+]
+
+# Coverage配置
+[tool.coverage.run]
+source = ["web_performance_monitor"]
+omit = [
+    "*/tests/*",
+    "*/test_*",
+    "*/__pycache__/*",
+    "*/venv/*",
+    "*/env/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+show_missing = true
+precision = 2
+
+# MyPy类型检查配置
+[tool.mypy]
+python_version = "3.7"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+[[tool.mypy.overrides]]
+module = [
+    "pyinstrument.*",
+    "mattermostdriver.*",
+    "flask.*",
+]
+ignore_missing_imports = true

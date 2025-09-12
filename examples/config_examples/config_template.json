@@ -1,0 +1,13 @@
+{
+  "threshold_seconds": 1.0,
+  "alert_window_days": 10,
+  "max_performance_overhead": 0.05,
+  "enable_local_file": true,
+  "local_output_dir": "/tmp",
+  "enable_mattermost": false,
+  "mattermost_server_url": "https://your-mattermost-server.com",
+  "mattermost_token": "your-mattermost-token",
+  "mattermost_channel_id": "your-channel-id",
+  "mattermost_max_retries": 3,
+  "log_level": "INFO"
+}

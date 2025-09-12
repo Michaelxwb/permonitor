@@ -1,0 +1,4 @@
+pyinstrument>=4.0.0
+flask>=2.0.0
+mattermostdriver>=7.0.0
+requests>=2.25.0

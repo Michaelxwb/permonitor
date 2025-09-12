@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include requirements.txt
+include pyproject.toml
+recursive-include web_performance_monitor *.py
+recursive-include web_performance_monitor py.typed
+recursive-exclude tests *
+recursive-exclude examples *
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store

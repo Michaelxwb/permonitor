@@ -188,8 +188,6 @@ class PerformanceMonitor:
             
             # 执行原函数
             result = func(*args, **kwargs)
-            return result
-            
         except Exception as e:
             exception_occurred = True
             self.logger.debug(f"被监控函数抛出异常: {func.__name__} - {e}")
@@ -201,6 +199,9 @@ class PerformanceMonitor:
             self._finalize_function_monitoring(
                 profiler, start_time, func_info, status_code
             )
+        
+        # 返回函数执行结果
+        return result
     
     def _extract_request_info(self, environ: dict) -> dict:
         """从WSGI环境中提取请求信息

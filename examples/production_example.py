@@ -3,7 +3,8 @@
 
 演示在生产环境中使用Web性能监控工具的最佳实践
 """
-
+import time
+import random
 import os
 import logging
 from flask import Flask, jsonify, request, g
@@ -20,13 +21,13 @@ def create_production_app():
     if not any(os.getenv(key) for key in ['WPM_THRESHOLD_SECONDS', 'WPM_ALERT_WINDOW_DAYS']):
         config = Config(
             # 生产环境推荐配置
-            threshold_seconds=2.0,              # 生产环境更宽松的阈值
+            threshold_seconds=0.5,              # 生产环境更宽松的阈值
             alert_window_days=30,               # 30天重复告警窗口
             max_performance_overhead=0.02,      # 2%性能开销限制
             
             # 本地文件通知
             enable_local_file=True,
-            local_output_dir="/var/log/performance_monitor",
+            local_output_dir="/tmp/log/performance_monitor",
             
             # Mattermost通知
             enable_mattermost=bool(os.getenv('MATTERMOST_SERVER_URL')),
@@ -52,10 +53,7 @@ def create_production_app():
     # 关键业务函数
     @performance_monitor
     def process_payment(amount: float, currency: str) -> dict:
-        """支付处理 - 关键业务逻辑"""
-        import time
-        import random
-        
+        """支付处理 - 关键业务逻辑"""  
         # 模拟支付处理时间
         processing_time = random.uniform(0.5, 2.5)
         time.sleep(processing_time)
@@ -73,8 +71,6 @@ def create_production_app():
     @performance_monitor
     def generate_report(report_type: str) -> dict:
         """报告生成 - 可能耗时的操作"""
-        import time
-        
         # 不同类型报告的处理时间
         processing_times = {
             'summary': 0.3,
@@ -130,8 +126,7 @@ def create_production_app():
     def get_user(user_id):
         """获取用户信息"""
         # 模拟数据库查询
-        import time
-        time.sleep(0.1)
+        time.sleep(1.0)
         
         return jsonify({
             "user_id": user_id,
@@ -201,7 +196,7 @@ def setup_production_logging():
         format=log_format,
         handlers=[
             logging.StreamHandler(),
-            logging.FileHandler('/var/log/app.log') if os.path.exists('/var/log') else logging.NullHandler()
+            logging.FileHandler('/tmp/log/app.log') if os.path.exists('/tmp/log') else logging.NullHandler()
         ]
     )
 
@@ -241,7 +236,7 @@ def main():
     print("\n📝 环境变量配置:")
     print("  WPM_THRESHOLD_SECONDS=2.0")
     print("  WPM_ALERT_WINDOW_DAYS=30")
-    print("  WPM_LOCAL_OUTPUT_DIR=/var/log/performance_monitor")
+    print("  WPM_LOCAL_OUTPUT_DIR=/tmp/log/performance_monitor")
     print("  WPM_ENABLE_MATTERMOST=true")
     print("  WPM_MATTERMOST_SERVER_URL=https://your-server.com")
     print("  WPM_MATTERMOST_TOKEN=your-token")
@@ -261,7 +256,7 @@ def main():
     
     try:
         # 生产环境配置
-        port = int(os.getenv('PORT', 8000))
+        port = int(os.getenv('PORT', 5001))
         host = os.getenv('HOST', '0.0.0.0')
         
         app.run(

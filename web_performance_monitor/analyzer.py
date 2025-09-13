@@ -22,34 +22,44 @@ class PerformanceAnalyzer:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
     
-    def start_profiling(self) -> Profiler:
+    def start_profiling(self) -> Optional[Profiler]:
         """开始pyinstrument性能分析
         
         Returns:
-            Profiler: pyinstrument分析器实例
+            Profiler: pyinstrument分析器实例，如果启动失败则返回None
             
         Raises:
             ProfilingError: 启动分析失败时抛出
         """
         try:
-            profiler = Profiler()
+            # 使用async_mode='disabled'来避免多分析器冲突问题
+            profiler = Profiler(async_mode='disabled')
             profiler.start()
             return profiler
         except Exception as e:
-            raise ProfilingError(f"启动性能分析失败: {e}")
+            # 检查是否是分析器冲突错误
+            if "already a profiler running" in str(e):
+                self.logger.warning(f"无法启动性能分析器: {e}")
+                return None
+            else:
+                raise ProfilingError(f"启动性能分析失败: {e}")
     
-    def stop_profiling(self, profiler: Profiler) -> str:
+    def stop_profiling(self, profiler: Optional[Profiler]) -> Optional[str]:
         """停止分析并生成包含详细性能分析的HTML报告
         
         Args:
             profiler: pyinstrument分析器实例
             
         Returns:
-            str: HTML格式的性能报告
+            str: HTML格式的性能报告，如果分析器无效则返回None
             
         Raises:
             ProfilingError: 停止分析或生成报告失败时抛出
         """
+        # 如果分析器无效，直接返回
+        if profiler is None:
+            return None
+            
         try:
             profiler.stop()
             
@@ -60,13 +70,13 @@ class PerformanceAnalyzer:
             session = profiler.last_session
             if session:
                 self.logger.debug(f"性能分析完成，采样数: {session.sample_count}")
-            
+                
             return html_report
             
         except Exception as e:
             raise ProfilingError(f"生成性能报告失败: {e}")
     
-    def get_execution_time(self, profiler: Profiler) -> float:
+    def get_execution_time(self, profiler: Optional[Profiler]) -> float:
         """获取精确的执行时间
         
         Args:
@@ -78,6 +88,10 @@ class PerformanceAnalyzer:
         Raises:
             ProfilingError: 获取执行时间失败时抛出
         """
+        # 如果分析器无效，返回0
+        if profiler is None:
+            return 0.0
+            
         try:
             session = profiler.last_session
             if session and session.duration:
@@ -88,22 +102,6 @@ class PerformanceAnalyzer:
                 return 0.0
         except Exception as e:
             raise ProfilingError(f"获取执行时间失败: {e}")
-    
-    def get_performance_overhead(self, original_time: float, monitored_time: float) -> float:
-        """计算监控工具的性能开销百分比
-        
-        Args:
-            original_time: 原始执行时间
-            monitored_time: 监控后的执行时间
-            
-        Returns:
-            float: 性能开销百分比（0-1之间）
-        """
-        if original_time <= 0:
-            return 0.0
-        
-        overhead = (monitored_time - original_time) / original_time
-        return max(0.0, overhead)  # 确保不为负数
 
 
 class PerformanceOverheadTracker:

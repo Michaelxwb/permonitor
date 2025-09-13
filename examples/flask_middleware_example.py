@@ -175,7 +175,7 @@ def main():
         # 启动Flask应用
         app.run(
             host='0.0.0.0',
-            port=5000,
+            port=5001,
             debug=False,  # 生产环境应该关闭debug
             threaded=True
         )

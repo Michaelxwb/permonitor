@@ -12,5 +12,9 @@ __all__ = [
     'SyncNotificationManager',
     'AsyncNotificationManager',
     'AsyncLocalFileNotifier',
-    'AsyncMattermostNotifier'
+    'AsyncMattermostNotifier',
+    'BaseNotifier',
+    'LocalFileNotifier',
+    'MattermostNotifier',
+    'NotificationFactory'
 ]

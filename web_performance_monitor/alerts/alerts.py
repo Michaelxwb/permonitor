@@ -9,8 +9,8 @@ from typing import List, Dict, Any, Optional
 from ..config.config import Config
 from ..models.models import PerformanceMetrics, AlertRecord
 from ..utils.cache import CacheManager
-from ..notifiers.factory import NotificationFactory
-from ..notifiers.base import BaseNotifier
+from ..notifications.notifiers.factory import NotificationFactory
+from ..notifications.notifiers.base import BaseNotifier
 from ..exceptions.exceptions import NotificationError
 from ..utils.utils import safe_execute
 from ..utils.formatters import NotificationFormatter

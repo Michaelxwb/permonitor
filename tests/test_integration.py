@@ -447,7 +447,7 @@ class TestEndToEndAlertFlow:
             mattermost_channel_id="test-channel"
         )
     
-    @patch('web_performance_monitor.notifiers.mattermost.Driver')
+    @patch('web_performance_monitor.notifications.notifiers.mattermost.Driver')
     def test_end_to_end_alert_flow_with_mattermost(self, mock_driver_class):
         """测试从检测到通知的完整告警流程（包含Mattermost）"""
         # 模拟Mattermost驱动

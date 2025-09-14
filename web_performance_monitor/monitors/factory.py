@@ -65,7 +65,7 @@ class MonitorFactory:
                 for attr_name in dir(obj):
                     try:
                         attr = getattr(obj, attr_name, None)
-                        if attr and hasattr(attr, '__class__') and 'FastAPI' in str(attr.__class__):
+                        if attr is not None and attr is not NotImplemented and hasattr(attr, '__class__') and 'FastAPI' in str(attr.__class__):
                             return True
                     except:
                         continue
@@ -98,7 +98,7 @@ class MonitorFactory:
                 for attr_name in dir(obj):
                     try:
                         attr = getattr(obj, attr_name, None)
-                        if attr and hasattr(attr, '__class__') and 'Flask' in str(attr.__class__):
+                        if attr is not None and attr is not NotImplemented and hasattr(attr, '__class__') and 'Flask' in str(attr.__class__):
                             return True
                     except:
                         continue

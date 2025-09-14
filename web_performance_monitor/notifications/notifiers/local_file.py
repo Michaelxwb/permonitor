@@ -7,12 +7,12 @@
 import os
 import logging
 from typing import TYPE_CHECKING
-from ..exceptions.exceptions import NotificationError
-from ..utils.formatters import NotificationFormatter
+from ...exceptions.exceptions import NotificationError
+from ...utils.formatters import NotificationFormatter
 from .base import BaseNotifier
 
 if TYPE_CHECKING:
-    from ..models.models import PerformanceMetrics
+    from ..models import PerformanceMetrics
 
 
 class LocalFileNotifier(BaseNotifier):

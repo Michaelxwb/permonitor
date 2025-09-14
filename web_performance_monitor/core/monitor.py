@@ -10,13 +10,13 @@ import functools
 from datetime import datetime
 from typing import Callable, Any, Optional, Dict
 from urllib.parse import parse_qs, urlparse
-from .config import Config
-from .analyzer import PerformanceAnalyzer, PerformanceOverheadTracker, TimingContext
-from .alerts import AlertManager
-from .models import PerformanceMetrics
-from .exceptions import PerformanceMonitorError, ProfilingError
-from .utils import safe_execute, setup_logging
-from .formatters import ConfigFormatter
+from ..config.config import Config
+from ..utils.analyzer import PerformanceAnalyzer, PerformanceOverheadTracker, TimingContext
+from ..alerts.alerts import AlertManager
+from ..models.models import PerformanceMetrics
+from ..exceptions.exceptions import PerformanceMonitorError, ProfilingError
+from ..utils.utils import safe_execute, setup_logging
+from ..utils.formatters import ConfigFormatter
 
 
 class PerformanceMonitor:
@@ -34,7 +34,7 @@ class PerformanceMonitor:
         self.config = config
         
         # 设置日志
-        from .logging_config import setup_logging_from_config
+        from ..config.logging_config import setup_logging_from_config
         self.perf_logger = setup_logging_from_config(config)
         self.logger = self.perf_logger.get_logger()
         
@@ -340,7 +340,12 @@ class PerformanceMonitor:
             if profiler:
                 # 停止性能分析
                 html_report = safe_execute(self.analyzer.stop_profiling, profiler)
-                execution_time = safe_execute(self.analyzer.get_execution_time, profiler) or total_time
+                execution_time = safe_execute(self.analyzer.get_execution_time, profiler)
+                
+                # 如果无法从profiler获取时间，使用总时间
+                if execution_time is None or execution_time <= 0:
+                    execution_time = total_time
+                    self.logger.debug(f"使用总时间作为执行时间: {execution_time:.4f}s")
                 
                 # 跟踪性能开销
                 self.overhead_tracker.track_overhead(execution_time, total_time)
@@ -389,7 +394,12 @@ class PerformanceMonitor:
             if profiler:
                 # 停止性能分析
                 html_report = safe_execute(self.analyzer.stop_profiling, profiler)
-                execution_time = safe_execute(self.analyzer.get_execution_time, profiler) or total_time
+                execution_time = safe_execute(self.analyzer.get_execution_time, profiler)
+                
+                # 如果无法从profiler获取时间，使用总时间
+                if execution_time is None or execution_time <= 0:
+                    execution_time = total_time
+                    self.logger.debug(f"使用总时间作为执行时间: {execution_time:.4f}s")
                 
                 # 跟踪性能开销
                 self.overhead_tracker.track_overhead(execution_time, total_time)

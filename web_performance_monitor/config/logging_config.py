@@ -11,7 +11,7 @@ import os
 import sys
 from datetime import datetime
 from typing import Dict, Any, Optional
-from .formatters import MetricsFormatter
+from ..utils.formatters import MetricsFormatter
 
 
 class PerformanceLogFormatter(logging.Formatter):

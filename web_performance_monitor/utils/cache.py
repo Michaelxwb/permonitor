@@ -8,8 +8,8 @@ import logging
 import threading
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional, List
-from .models import CacheEntry, PerformanceMetrics
-from .exceptions import CacheError
+from ..models.models import CacheEntry, PerformanceMetrics
+from ..exceptions.exceptions import CacheError
 
 
 class CacheManager:

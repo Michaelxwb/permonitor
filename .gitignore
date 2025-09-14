@@ -182,11 +182,19 @@ config.local.json
 *.local.json
 *.local.yaml
 *.local.yml
+.pypirc
 
 # Test output files
 test_output/
 test_reports/
 performance_reports/
+advanced_reports/
+fastapi_reports/
+function_reports/
+
+# Test result files
+*_test_results.json
+fastapi_test_results.json
 
 # Log files
 *.log
@@ -218,3 +226,15 @@ cache/
 # Temporary directories
 tmp/
 temp/
+
+# IDE and editor files
+.kiro/
+*.swp
+*.swo
+*~
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+.eggs/

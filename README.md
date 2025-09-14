@@ -4,7 +4,7 @@
 [![Python Support](https://img.shields.io/pypi/pyversions/web-performance-monitor.svg)](https://pypi.org/project/web-performance-monitor/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-基于pyinstrument的Flask应用性能监控和告警工具，提供零入侵的性能监控解决方案。
+基于pyinstrument的Web应用性能监控和告警工具，支持Flask和FastAPI，提供零入侵的性能监控解决方案。
 
 ## ✨ 功能特性
 
@@ -26,8 +26,14 @@
 # 基础安装
 pip install web-performance-monitor
 
+# 包含FastAPI支持
+pip install web-performance-monitor[fastapi]
+
 # 包含Mattermost支持
 pip install web-performance-monitor[mattermost]
+
+# 完整安装（包含所有可选依赖）
+pip install web-performance-monitor[all]
 
 # 开发环境安装
 pip install web-performance-monitor[dev]
@@ -66,28 +72,90 @@ if __name__ == '__main__':
     app.run()
 ```
 
-#### 2. 装饰器模式
+#### 2. FastAPI中间件模式
 
-监控特定的关键函数：
+FastAPI应用的集成方式：
+
+```python
+from fastapi import FastAPI, Request
+from web_performance_monitor import PerformanceMonitor, Config
+import time
+
+app = FastAPI()
+
+# 配置监控
+config = Config(
+    threshold_seconds=0.5,              # FastAPI通常响应更快
+    enable_local_file=True,
+    local_output_dir="./fastapi_reports",
+)
+
+monitor = PerformanceMonitor(config)
+
+# FastAPI中间件集成
+@app.middleware("http")
+async def performance_middleware(request: Request, call_next):
+    # 将ASGI请求转换为WSGI环境
+    environ = {
+        'REQUEST_METHOD': request.method,
+        'PATH_INFO': request.url.path,
+        'QUERY_STRING': str(request.url.query) if request.url.query else '',
+        'SERVER_NAME': request.url.hostname or 'localhost',
+        'SERVER_PORT': str(request.url.port or 80),
+        'wsgi.url_scheme': request.url.scheme,
+    }
+    
+    # 提取请求信息并监控
+    request_info = monitor._extract_request_info(environ)
+    profiler = monitor.analyzer.start_profiling()
+    start_time = time.perf_counter()
+    
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    except Exception as e:
+        status_code = 500
+        raise
+    finally:
+        monitor._finalize_request_monitoring(
+            profiler, start_time, request_info, status_code
+        )
+
+@app.get("/api/users")
+async def get_users():
+    # 业务逻辑 - 会被自动监控
+    return {"users": []}
+
+# 运行: uvicorn main:app --reload
+```
+
+#### 3. 装饰器模式
+
+监控特定的关键函数（支持同步和异步）：
 
 ```python
 from web_performance_monitor import PerformanceMonitor, Config
+import asyncio
 
 config = Config(threshold_seconds=0.5)
 monitor = PerformanceMonitor(config)
 
+# 同步函数监控
 @monitor.create_decorator()
 def slow_database_query(user_id):
     # 关键业务逻辑 - 独立监控
     return database.query_user_data(user_id)
 
+# 异步函数监控
 @monitor.create_decorator()
-def complex_calculation(data):
-    # 复杂计算逻辑
+async def async_calculation(data):
+    # 异步复杂计算逻辑
+    await asyncio.sleep(0.1)  # 模拟异步操作
     return process_complex_data(data)
 ```
 
-#### 3. 环境变量配置
+#### 4. 环境变量配置
 
 生产环境推荐使用环境变量配置：
 

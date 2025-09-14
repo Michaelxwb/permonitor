@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ..models.models import PerformanceMetrics
+    from ..models import PerformanceMetrics
 
 
 class BaseNotifier(ABC):

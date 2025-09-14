@@ -6,8 +6,8 @@
 
 import logging
 from typing import List, Dict, Type, Any
-from ..config.config import Config
-from ..exceptions.exceptions import ConfigurationError, NotificationError
+from ...config.config import Config
+from ...exceptions.exceptions import ConfigurationError, NotificationError
 from .base import BaseNotifier
 from .local_file import LocalFileNotifier
 from .mattermost import MattermostNotifier

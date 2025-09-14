@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "web-performance-monitor"
-version = "1.1.4"
-description = "基于pyinstrument的Flask应用性能监控和告警工具"
+version = "1.2.0"
+description = "基于pyinstrument的Web应用性能监控和告警工具，支持Flask和FastAPI"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -14,7 +14,7 @@ authors = [
 maintainers = [
     {name = "Jahan", email = "ambition_xu@163.com"}
 ]
-keywords = ["flask", "performance", "monitoring", "profiling", "alerts", "pyinstrument"]
+keywords = ["flask", "fastapi", "performance", "monitoring", "profiling", "alerts", "pyinstrument", "web", "asgi", "wsgi"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Framework :: Flask",
+    "Framework :: FastAPI",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Topic :: System :: Monitoring",
     "Topic :: Software Development :: Quality Assurance",
@@ -40,6 +41,10 @@ dependencies = [
 
 [project.optional-dependencies]
 mattermost = ["mattermostdriver>=7.0.0"]
+fastapi = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+]
 dev = [
     "pytest>=6.0.0",
     "pytest-mock>=3.0.0",
@@ -48,9 +53,13 @@ dev = [
     "black>=22.0.0",
     "flake8>=4.0.0",
     "mypy>=0.950",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
 ]
 all = [
     "mattermostdriver>=7.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
 ]
 
 [project.urls]

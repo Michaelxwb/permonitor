@@ -7,7 +7,7 @@
 import json
 from datetime import datetime
 from typing import Dict, Any
-from .models import PerformanceMetrics
+from ..models.models import PerformanceMetrics
 
 
 class NotificationFormatter:

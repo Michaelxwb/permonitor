@@ -9,7 +9,7 @@ import logging
 from typing import Optional, List
 from collections import deque
 from pyinstrument import Profiler
-from .exceptions import ProfilingError
+from ..exceptions.exceptions import ProfilingError
 from .utils import safe_execute
 
 
@@ -90,18 +90,20 @@ class PerformanceAnalyzer:
         """
         # 如果分析器无效，返回0
         if profiler is None:
+            self.logger.debug("分析器为空，无法获取执行时间")
             return 0.0
             
         try:
             session = profiler.last_session
-            if session and session.duration:
+            if session and hasattr(session, 'duration') and session.duration is not None:
                 return session.duration
             else:
-                # 如果无法从session获取，返回0
-                self.logger.warning("无法从profiler获取执行时间")
+                # 如果无法从session获取，记录调试信息而不是警告
+                self.logger.debug("profiler session无效或缺少duration数据")
                 return 0.0
         except Exception as e:
-            raise ProfilingError(f"获取执行时间失败: {e}")
+            self.logger.debug(f"获取执行时间时出现异常: {e}")
+            return 0.0
 
 
 class PerformanceOverheadTracker:

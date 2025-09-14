@@ -1,4 +1,11 @@
+# 核心依赖
 pyinstrument>=4.0.0
 flask>=2.0.0
-mattermostdriver>=7.0.0
 requests>=2.25.0
+
+# 可选依赖
+mattermostdriver>=7.0.0  # Mattermost通知支持
+
+# FastAPI支持（可选）
+# fastapi>=0.100.0
+# uvicorn>=0.20.0

@@ -9,12 +9,12 @@ import logging
 import tempfile
 import os
 from typing import TYPE_CHECKING, Optional
-from ..exceptions.exceptions import NotificationError
-from ..utils.formatters import NotificationFormatter
+from ...exceptions.exceptions import NotificationError
+from ...utils.formatters import NotificationFormatter
 from .base import BaseNotifier
 
 if TYPE_CHECKING:
-    from ..models.models import PerformanceMetrics
+    from ..models import PerformanceMetrics
 
 try:
     from mattermostdriver import Driver

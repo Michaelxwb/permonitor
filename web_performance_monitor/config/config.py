@@ -9,8 +9,8 @@ import json
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional
-from .exceptions import ConfigurationError
-from .utils import validate_threshold, validate_window_days
+from ..exceptions.exceptions import ConfigurationError
+from ..utils.utils import validate_threshold, validate_window_days
 
 
 @dataclass

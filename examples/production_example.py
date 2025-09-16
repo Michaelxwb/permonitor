@@ -15,7 +15,18 @@ def create_production_app():
     app = Flask(__name__)
     
     # 生产环境配置
-    config = Config.from_env()  # 从环境变量加载配置
+    # 直接配置
+    config = Config(
+        threshold_seconds=float(os.getenv('WPM_THRESHOLD_SECONDS', '2.0')),
+        alert_window_days=int(os.getenv('WPM_ALERT_WINDOW_DAYS', '7')),
+        enable_local_file=os.getenv('WPM_ENABLE_LOCAL_FILE', 'true').lower() == 'true',
+        local_output_dir=os.getenv('WPM_LOCAL_OUTPUT_DIR', '/tmp/log/performance_monitor'),
+        enable_mattermost=os.getenv('WPM_ENABLE_MATTERMOST', 'false').lower() == 'true',
+        mattermost_server_url=os.getenv('WPM_MATTERMOST_SERVER_URL', ''),
+        mattermost_token=os.getenv('WPM_MATTERMOST_TOKEN', ''),
+        mattermost_channel_id=os.getenv('WPM_MATTERMOST_CHANNEL_ID', ''),
+        log_level=os.getenv('WPM_LOG_LEVEL', 'WARNING')
+    )
     
     # 如果环境变量未设置，使用生产环境默认值
     if not any(os.getenv(key) for key in ['WPM_THRESHOLD_SECONDS', 'WPM_ALERT_WINDOW_DAYS']):

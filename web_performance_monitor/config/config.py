@@ -47,67 +47,7 @@ class Config:
         """初始化后验证配置"""
         self.validate()
     
-    @classmethod
-    def from_env(cls) -> 'Config':
-        """从环境变量加载配置
-        
-        支持的环境变量：
-        - WPM_THRESHOLD_SECONDS: 响应时间阈值
-        - WPM_ALERT_WINDOW_DAYS: 重复告警时间窗口
-        - WPM_MAX_PERFORMANCE_OVERHEAD: 最大性能开销
-        - WPM_ENABLE_LOCAL_FILE: 启用本地文件通知
-        - WPM_LOCAL_OUTPUT_DIR: 本地文件输出目录
-        - WPM_ENABLE_MATTERMOST: 启用Mattermost通知
-        - WPM_MATTERMOST_SERVER_URL: Mattermost服务器URL
-        - WPM_MATTERMOST_TOKEN: Mattermost访问令牌
-        - WPM_MATTERMOST_CHANNEL_ID: Mattermost频道ID
-        - WPM_MATTERMOST_MAX_RETRIES: Mattermost最大重试次数
-        - WPM_LOG_LEVEL: 日志级别
-        - WPM_URL_BLACKLIST: URL黑名单，多个URL用逗号分隔
-        - WPM_ENABLE_URL_BLACKLIST: 启用URL黑名单功能
-        
-        Returns:
-            Config: 从环境变量加载的配置实例
-        """
-        try:
-            return cls(
-                threshold_seconds=float(os.getenv('WPM_THRESHOLD_SECONDS', '1.0')),
-                alert_window_days=int(os.getenv('WPM_ALERT_WINDOW_DAYS', '10')),
-                max_performance_overhead=float(os.getenv('WPM_MAX_PERFORMANCE_OVERHEAD', '0.05')),
-                
-                enable_local_file=os.getenv('WPM_ENABLE_LOCAL_FILE', 'true').lower() == 'true',
-                local_output_dir=os.getenv('WPM_LOCAL_OUTPUT_DIR', '/tmp'),
-                
-                enable_mattermost=os.getenv('WPM_ENABLE_MATTERMOST', 'false').lower() == 'true',
-                mattermost_server_url=os.getenv('WPM_MATTERMOST_SERVER_URL', ''),
-                mattermost_token=os.getenv('WPM_MATTERMOST_TOKEN', ''),
-                mattermost_channel_id=os.getenv('WPM_MATTERMOST_CHANNEL_ID', ''),
-                mattermost_max_retries=int(os.getenv('WPM_MATTERMOST_MAX_RETRIES', '3')),
-                
-                log_level=os.getenv('WPM_LOG_LEVEL', 'INFO'),
-                
-                url_blacklist=cls._parse_url_blacklist(os.getenv('WPM_URL_BLACKLIST', '')),
-                enable_url_blacklist=os.getenv('WPM_ENABLE_URL_BLACKLIST', 'true').lower() == 'true'
-            )
-        except (ValueError, TypeError) as e:
-            raise ConfigurationError(f"环境变量配置错误: {e}")
     
-    @staticmethod
-    def _parse_url_blacklist(blacklist_str: str) -> list:
-        """解析URL黑名单字符串
-        
-        Args:
-            blacklist_str: 逗号分隔的URL黑名单字符串
-            
-        Returns:
-            list: URL黑名单列表
-        """
-        if not blacklist_str:
-            return []
-        
-        # 分割并清理空白字符
-        urls = [url.strip() for url in blacklist_str.split(',') if url.strip()]
-        return urls
     
     @classmethod
     def from_dict(cls, config_dict: Dict[str, Any]) -> 'Config':

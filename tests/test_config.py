@@ -44,38 +44,6 @@ class TestConfig:
         assert config.enable_mattermost is True
         assert config.mattermost_server_url == "https://test.com"
     
-    def test_from_env_valid(self):
-        """测试从环境变量加载有效配置"""
-        env_vars = {
-            'WPM_THRESHOLD_SECONDS': '1.5',
-            'WPM_ALERT_WINDOW_DAYS': '7',
-            'WPM_ENABLE_LOCAL_FILE': 'true',
-            'WPM_LOCAL_OUTPUT_DIR': '/custom/path',
-            'WPM_ENABLE_MATTERMOST': 'false',
-            'WPM_LOG_LEVEL': 'DEBUG'
-        }
-        
-        with patch.dict(os.environ, env_vars):
-            config = Config.from_env()
-            
-            assert config.threshold_seconds == 1.5
-            assert config.alert_window_days == 7
-            assert config.enable_local_file is True
-            assert config.local_output_dir == '/custom/path'
-            assert config.enable_mattermost is False
-            assert config.log_level == 'DEBUG'
-    
-    def test_from_env_invalid_values(self):
-        """测试从环境变量加载无效值"""
-        env_vars = {
-            'WPM_THRESHOLD_SECONDS': 'invalid',
-            'WPM_ALERT_WINDOW_DAYS': 'not_a_number'
-        }
-        
-        with patch.dict(os.environ, env_vars):
-            with pytest.raises(ConfigurationError):
-                Config.from_env()
-    
     def test_from_dict_valid(self):
         """测试从字典加载有效配置"""
         config_dict = {

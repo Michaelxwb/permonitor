@@ -1,30 +1,28 @@
 """
-环境变量配置示例
+直接配置示例
 
-演示如何使用环境变量配置性能监控工具
+演示如何直接配置性能监控工具
 """
 
-import os
 from flask import Flask
 from web_performance_monitor import PerformanceMonitor, Config
-
-# 设置环境变量
-os.environ['WPM_THRESHOLD_SECONDS'] = '2.0'
-os.environ['WPM_ALERT_WINDOW_DAYS'] = '7'
-os.environ['WPM_ENABLE_LOCAL_FILE'] = 'true'
-os.environ['WPM_LOCAL_OUTPUT_DIR'] = '/tmp/performance_reports'
-os.environ['WPM_ENABLE_MATTERMOST'] = 'true'
-os.environ['WPM_MATTERMOST_SERVER_URL'] = 'https://mattermost.example.com'
-os.environ['WPM_MATTERMOST_TOKEN'] = 'your-mattermost-token'
-os.environ['WPM_MATTERMOST_CHANNEL_ID'] = 'your-channel-id'
-os.environ['WPM_LOG_LEVEL'] = 'DEBUG'
 
 def create_app():
     """创建Flask应用并配置性能监控"""
     app = Flask(__name__)
     
-    # 从环境变量加载配置
-    config = Config.from_env()
+    # 直接配置
+    config = Config(
+        threshold_seconds=2.0,
+        alert_window_days=7,
+        enable_local_file=True,
+        local_output_dir='/tmp/performance_reports',
+        enable_mattermost=True,
+        mattermost_server_url='https://mattermost.example.com',
+        mattermost_token='your-mattermost-token',
+        mattermost_channel_id='your-channel-id',
+        log_level='DEBUG'
+    )
     
     # 打印生效的配置（脱敏后）
     print("生效的配置:")

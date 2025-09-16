@@ -31,43 +31,7 @@ class UnifiedConfig(Config):
     flask_wsgi_buffer_size: int = 8192
     flask_request_body_limit: int = 10240
     
-    @classmethod
-    def from_env(cls, framework: Optional[str] = None) -> 'UnifiedConfig':
-        """从环境变量加载配置"""
-        # 首先加载基础配置
-        base_config = super().from_env()
-        
-        # 创建统一配置实例
-        config = cls(
-            threshold_seconds=base_config.threshold_seconds,
-            alert_window_days=base_config.alert_window_days,
-            max_performance_overhead=base_config.max_performance_overhead,
-            enable_local_file=base_config.enable_local_file,
-            local_output_dir=base_config.local_output_dir,
-            enable_mattermost=base_config.enable_mattermost,
-            mattermost_server_url=base_config.mattermost_server_url,
-            mattermost_token=base_config.mattermost_token,
-            mattermost_channel_id=base_config.mattermost_channel_id,
-            mattermost_max_retries=base_config.mattermost_max_retries,
-            log_level=base_config.log_level,
-            url_blacklist=base_config.url_blacklist,
-            enable_url_blacklist=base_config.enable_url_blacklist
-        )
-        
-        # 加载框架特定配置
-        if framework == 'fastapi':
-            config.fastapi_async_timeout = float(os.getenv('WPM_FASTAPI_ASYNC_TIMEOUT', config.fastapi_async_timeout))
-            config.fastapi_concurrent_notifications = os.getenv('WPM_FASTAPI_CONCURRENT_NOTIFICATIONS', 'true').lower() == 'true'
-            config.fastapi_max_concurrent_alerts = int(os.getenv('WPM_FASTAPI_MAX_CONCURRENT_ALERTS', config.fastapi_max_concurrent_alerts))
-        elif framework == 'flask':
-            config.flask_wsgi_buffer_size = int(os.getenv('WPM_FLASK_WSGI_BUFFER_SIZE', config.flask_wsgi_buffer_size))
-            config.flask_request_body_limit = int(os.getenv('WPM_FLASK_REQUEST_BODY_LIMIT', config.flask_request_body_limit))
-        
-        # 加载告警重试配置
-        config.alert_max_retries = int(os.getenv('WPM_ALERT_MAX_RETRIES', config.alert_max_retries))
-        config.alert_retry_delay = float(os.getenv('WPM_ALERT_RETRY_DELAY', config.alert_retry_delay))
-        
-        return config
+    
     
     def validate_for_framework(self, framework: str) -> None:
         """验证框架特定配置"""

@@ -153,7 +153,8 @@ class MonitorFactory:
 def create_web_monitor(framework: str = None, config: dict = None) -> BaseWebMonitor:
     """创建web监控器的统一入口"""
     if config is None:
-        unified_config = UnifiedConfig.from_env(framework)
+        # 使用默认配置
+        unified_config = UnifiedConfig()
     else:
         unified_config = UnifiedConfig.from_dict(config)
     

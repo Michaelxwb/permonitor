@@ -155,29 +155,25 @@ async def async_calculation(data):
     return process_complex_data(data)
 ```
 
-#### 4. 环境变量配置
+#### 4. 直接配置
 
-生产环境推荐使用环境变量配置：
-
-```bash
-# 基础配置
-export WPM_THRESHOLD_SECONDS=2.0
-export WPM_ALERT_WINDOW_DAYS=7
-export WPM_ENABLE_LOCAL_FILE=true
-export WPM_LOCAL_OUTPUT_DIR=/var/log/performance
-
-# Mattermost通知配置
-export WPM_ENABLE_MATTERMOST=true
-export WPM_MATTERMOST_SERVER_URL=https://mattermost.example.com
-export WPM_MATTERMOST_TOKEN=your-bot-token
-export WPM_MATTERMOST_CHANNEL_ID=your-channel-id
-```
+生产环境推荐使用直接配置：
 
 ```python
 from web_performance_monitor import Config, PerformanceMonitor
 
-# 从环境变量自动加载配置
-config = Config.from_env()
+# 直接配置
+config = Config(
+    threshold_seconds=2.0,
+    alert_window_days=7,
+    enable_local_file=True,
+    local_output_dir="/var/log/performance",
+    enable_mattermost=True,
+    mattermost_server_url="https://mattermost.example.com",
+    mattermost_token="your-bot-token",
+    mattermost_channel_id="your-channel-id"
+)
+
 monitor = PerformanceMonitor(config)
 
 # 应用到Flask应用
@@ -230,7 +226,12 @@ app = Flask(__name__)
 app.register_blueprint(api_bp)
 
 # 应用监控（会监控所有蓝图的路由）
-config = Config.from_env()
+config = Config(
+    threshold_seconds=1.0,
+    alert_window_days=10,
+    enable_local_file=True,
+    local_output_dir="/tmp"
+)
 monitor = PerformanceMonitor(config)
 app.wsgi_app = monitor.create_middleware()(app.wsgi_app)
 ```
@@ -318,20 +319,20 @@ def generate_report(report_type, filters):
 
 ### 完整配置表
 
-| 配置项 | 环境变量 | 默认值 | 说明 |
-|--------|----------|--------|------|
-| threshold_seconds | WPM_THRESHOLD_SECONDS | 1.0 | 响应时间阈值（秒） |
-| alert_window_days | WPM_ALERT_WINDOW_DAYS | 10 | 重复告警时间窗口（天） |
-| max_performance_overhead | WPM_MAX_PERFORMANCE_OVERHEAD | 0.05 | 最大性能开销（5%） |
-| enable_local_file | WPM_ENABLE_LOCAL_FILE | true | 启用本地文件通知 |
-| local_output_dir | WPM_LOCAL_OUTPUT_DIR | /tmp | 本地文件输出目录 |
-| enable_mattermost | WPM_ENABLE_MATTERMOST | false | 启用Mattermost通知 |
-| mattermost_server_url | WPM_MATTERMOST_SERVER_URL | - | Mattermost服务器URL |
-| mattermost_token | WPM_MATTERMOST_TOKEN | - | Mattermost访问令牌 |
-| mattermost_channel_id | WPM_MATTERMOST_CHANNEL_ID | - | Mattermost频道ID |
-| url_blacklist | WPM_URL_BLACKLIST | [] | URL黑名单（逗号分隔，支持正则） |
-| enable_url_blacklist | WPM_ENABLE_URL_BLACKLIST | true | 启用URL黑名单功能 |
-| log_level | WPM_LOG_LEVEL | INFO | 日志级别 |
+| 配置项 | 默认值 | 说明 |
+|--------|--------|------|
+| threshold_seconds | 1.0 | 响应时间阈值（秒） |
+| alert_window_days | 10 | 重复告警时间窗口（天） |
+| max_performance_overhead | 0.05 | 最大性能开销（5%） |
+| enable_local_file | true | 启用本地文件通知 |
+| local_output_dir | /tmp | 本地文件输出目录 |
+| enable_mattermost | false | 启用Mattermost通知 |
+| mattermost_server_url | - | Mattermost服务器URL |
+| mattermost_token | - | Mattermost访问令牌 |
+| mattermost_channel_id | - | Mattermost频道ID |
+| url_blacklist | [] | URL黑名单（逗号分隔，支持正则） |
+| enable_url_blacklist | true | 启用URL黑名单功能 |
+| log_level | INFO | 日志级别 |
 
 ### 配置示例
 
@@ -585,7 +586,7 @@ config = Config(
     threshold_seconds=float(os.getenv('WPM_THRESHOLD', '2.0')),
     alert_window_days=int(os.getenv('WPM_WINDOW_DAYS', '7')),
     enable_local_file=True,
-    local_output_dir=os.getenv('WPM_LOG_DIR', '/var/log/performance'),
+    local_output_dir=os.getenv('WPM_LOCAL_OUTPUT_DIR', '/var/log/performance'),
     enable_mattermost=os.getenv('WPM_ENABLE_MATTERMOST', 'false').lower() == 'true',
     mattermost_server_url=os.getenv('MATTERMOST_URL'),
     mattermost_token=os.getenv('MATTERMOST_TOKEN'),
@@ -620,7 +621,12 @@ monitor = PerformanceMonitor(config)
 
 ```python
 # 检查配置
-config = Config.from_env()
+config = Config(
+    threshold_seconds=1.0,
+    alert_window_days=10,
+    enable_local_file=True,
+    local_output_dir="/tmp"
+)
 monitor = PerformanceMonitor(config)
 
 # 测试连接

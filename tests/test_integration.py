@@ -785,17 +785,6 @@ class TestConfigurationIntegration:
             'WPM_ENABLE_MATTERMOST': 'false'
         }
         
-        with patch.dict(os.environ, env_vars):
-            config = Config.from_env()
-            monitor = PerformanceMonitor(config)
-            
-            # 验证配置生效
-            assert monitor.config.threshold_seconds == 0.2
-            assert monitor.config.alert_window_days == 5
-            assert monitor.config.enable_local_file is True
-            assert monitor.config.local_output_dir == env_vars['WPM_LOCAL_OUTPUT_DIR']
-            assert monitor.config.enable_mattermost is False
-    
     def test_config_file_integration(self):
         """测试配置文件集成"""
         config_data = {

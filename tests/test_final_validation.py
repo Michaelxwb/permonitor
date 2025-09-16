@@ -618,30 +618,6 @@ class TestRealWorldScenarios:
         # 由于去重，文件数量应该少于慢请求数量
         print(f"去重测试生成文件: {html_files}")
         assert len(html_files) >= 1, "应该生成告警文件"
-    
-    def test_configuration_loading_from_environment_and_file(self):
-        """测试从环境变量和文件加载配置"""
-        # 1. 测试环境变量配置
-        env_vars = {
-            'WPM_THRESHOLD_SECONDS': '0.2',
-            'WPM_ALERT_WINDOW_DAYS': '7',
-            'WPM_ENABLE_LOCAL_FILE': 'true',
-            'WPM_LOCAL_OUTPUT_DIR': self.temp_dir,
-            'WPM_ENABLE_MATTERMOST': 'false',
-            'WPM_LOG_LEVEL': 'DEBUG'
-        }
-        
-        with patch.dict(os.environ, env_vars):
-            config = Config.from_env()
-            monitor = PerformanceMonitor(config)
-            
-            # 验证配置正确加载
-            assert config.threshold_seconds == 0.2
-            assert config.alert_window_days == 7
-            assert config.enable_local_file is True
-            assert config.local_output_dir == self.temp_dir
-            assert config.enable_mattermost is False
-            assert config.log_level == 'DEBUG'
         
         # 2. 测试文件配置
         config_data = {

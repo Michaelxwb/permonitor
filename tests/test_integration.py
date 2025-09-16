@@ -15,8 +15,8 @@ import pytest
 from flask import Flask, request, jsonify
 
 from web_performance_monitor import PerformanceMonitor, Config
-from web_performance_monitor.models import PerformanceMetrics
-from web_performance_monitor.exceptions import PerformanceMonitorError
+from web_performance_monitor.models.models import PerformanceMetrics
+from web_performance_monitor.exceptions.exceptions import PerformanceMonitorError
 
 
 class TestFlaskMiddlewareIntegration:

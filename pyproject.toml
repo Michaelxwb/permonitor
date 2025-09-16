@@ -37,10 +37,10 @@ dependencies = [
     "pyinstrument>=4.0.0",
     "flask>=2.0.0",
     "requests>=2.25.0",
+    "mattermostdriver>=7.0.0",
 ]
 
 [project.optional-dependencies]
-mattermost = ["mattermostdriver>=7.0.0"]
 fastapi = [
     "fastapi>=0.100.0",
     "uvicorn>=0.20.0",
@@ -107,6 +107,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
+    "asyncio: marks tests as asyncio tests",
 ]
 
 # Coverage配置

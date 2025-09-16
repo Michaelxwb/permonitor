@@ -58,7 +58,9 @@ class MonitorFactory:
             import fastapi
             
             # 检查是否有FastAPI应用实例在运行
-            for name, obj in sys.modules.items():
+            # 创建副本以避免在迭代时修改字典
+            modules_copy = dict(sys.modules)
+            for name, obj in modules_copy.items():
                 if hasattr(obj, 'FastAPI'):
                     return True
                 # 检查模块中是否有FastAPI应用实例
@@ -91,7 +93,9 @@ class MonitorFactory:
             import flask
             
             # 检查是否有Flask应用实例
-            for name, obj in sys.modules.items():
+            # 创建副本以避免在迭代时修改字典
+            modules_copy = dict(sys.modules)
+            for name, obj in modules_copy.items():
                 if hasattr(obj, 'Flask'):
                     return True
                 # 检查模块中是否有Flask应用实例

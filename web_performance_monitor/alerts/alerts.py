@@ -109,14 +109,6 @@ class AlertManager:
         notification_status = {}
         
         try:
-            # 标记已告警，防止重复
-            cache_key = self.cache_manager.generate_metrics_key(metrics)
-            self.cache_manager.mark_alerted(cache_key, {
-                'endpoint': metrics.endpoint,
-                'execution_time': metrics.execution_time,
-                'timestamp': metrics.timestamp.isoformat()
-            })
-            
             # 发送到所有启用的通知器
             for notifier in self.notifiers:
                 notifier_name = notifier.__class__.__name__
@@ -137,6 +129,10 @@ class AlertManager:
                 execution_time=metrics.execution_time,
                 notification_status=notification_status
             )
+            
+            # 标记已告警，防止重复（存储完整的告警记录）
+            cache_key = self.cache_manager.generate_metrics_key(metrics)
+            self.cache_manager.mark_alerted(cache_key, alert_record.to_dict())
             
             # 记录告警摘要
             successful_notifiers = [name for name, success in notification_status.items() if success]

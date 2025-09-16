@@ -45,15 +45,13 @@ class TestMultiFrameworkSupport:
         monitor = FastAPIMonitor(config)
         
         # Mock FastAPI imports
+        mock_base_middleware = MagicMock()
         with patch.dict('sys.modules', {
             'fastapi': MagicMock(),
-            'starlette.middleware.base': MagicMock()
+            'starlette.middleware.base': MagicMock(BaseHTTPMiddleware=mock_base_middleware)
         }):
-            # Mock the BaseHTTPMiddleware
-            mock_base_middleware = MagicMock()
-            with patch('web_performance_monitor.fastapi_monitor.BaseHTTPMiddleware', mock_base_middleware):
-                middleware_class = monitor.create_middleware()
-                assert middleware_class is not None
+            middleware_class = monitor.create_middleware()
+            assert middleware_class is not None
     
     def test_framework_detection_flask(self):
         """测试Flask框架检测"""
@@ -99,7 +97,11 @@ class TestMultiFrameworkSupport:
         """测试统一创建函数的配置传递"""
         config_dict = {
             'threshold_seconds': 2.0,
-            'enable_local_file': False
+            'enable_local_file': False,
+            'enable_mattermost': True,  # 需要启用至少一种通知方式
+            'mattermost_server_url': 'http://test.com',
+            'mattermost_token': 'test_token',
+            'mattermost_channel_id': 'test_channel'
         }
         monitor = create_web_monitor(framework='flask', config=config_dict)
         assert monitor.config.threshold_seconds == 2.0

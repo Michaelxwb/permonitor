@@ -71,6 +71,9 @@ class TestAsyncMonitoring:
     @pytest.mark.asyncio
     async def test_async_monitoring_execution(self, fastapi_monitor):
         """测试异步监控执行流程"""
+        # 设置较低的阈值以确保会调用stop_profiling_async
+        fastapi_monitor.config.threshold_seconds = 0.01
+        
         async def test_operation():
             await asyncio.sleep(0.02)
             return "monitored_result"
@@ -88,6 +91,7 @@ class TestAsyncMonitoring:
         
         # 验证analyzer方法被调用
         fastapi_monitor.analyzer.start_profiling_async.assert_called_once()
+        fastapi_monitor.analyzer.stop_profiling_async.assert_called_once()
         fastapi_monitor.analyzer.stop_profiling_async.assert_called_once()
     
     @pytest.mark.asyncio
@@ -231,7 +235,7 @@ class TestAsyncRetryMechanism:
     @pytest.mark.asyncio
     async def test_retry_success_on_first_attempt(self):
         """测试第一次尝试就成功"""
-        from web_performance_monitor.async_retry import AsyncRetryHandler
+        from web_performance_monitor.utils.async_retry import AsyncRetryHandler
         
         async def successful_operation():
             return "success"
@@ -244,7 +248,7 @@ class TestAsyncRetryMechanism:
     @pytest.mark.asyncio
     async def test_retry_success_after_failures(self):
         """测试失败后重试成功"""
-        from web_performance_monitor.async_retry import AsyncRetryHandler
+        from web_performance_monitor.utils.async_retry import AsyncRetryHandler
         
         call_count = 0
         
@@ -264,7 +268,7 @@ class TestAsyncRetryMechanism:
     @pytest.mark.asyncio
     async def test_retry_final_failure(self):
         """测试最终失败"""
-        from web_performance_monitor.async_retry import AsyncRetryHandler
+        from web_performance_monitor.utils.async_retry import AsyncRetryHandler
         
         async def always_failing_operation():
             raise Exception("Permanent failure")

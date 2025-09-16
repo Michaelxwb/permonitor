@@ -16,6 +16,9 @@ from pathlib import Path
 def run_command(cmd, check=True, cwd=None):
     """运行命令"""
     print(f"🔧 执行: {cmd}")
+    # 替换python为python3以确保兼容性
+    if cmd.startswith("python ") or cmd == "python":
+        cmd = cmd.replace("python", "python3", 1)
     result = subprocess.run(cmd, shell=True, check=check, cwd=cwd)
     return result.returncode == 0
 

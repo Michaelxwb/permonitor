@@ -85,7 +85,12 @@ class AsyncFunctionExecutionContext(FunctionExecutionContext):
     def execute(self) -> Any:
         """同步执行（不推荐在异步环境中使用）"""
         # 为了兼容性提供，但不推荐使用
-        loop = asyncio.get_event_loop()
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # 如果没有事件循环，创建一个新的
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
         return loop.run_until_complete(self.execute_async())
 
 

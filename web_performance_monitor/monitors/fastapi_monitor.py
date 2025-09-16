@@ -96,13 +96,20 @@ class FastAPIMonitor(BaseWebMonitor):
             
             if profiler:
                 execution_time = await self.analyzer.get_execution_time_async(profiler)
-                html_report = await self.analyzer.stop_profiling_async(profiler)
+                html_report = None
+                
+                # 只有当执行时间超过阈值时才生成详细的HTML报告
+                if execution_time > self.config.threshold_seconds:
+                    html_report = await self.analyzer.stop_profiling_async(profiler)
                 
                 # 更新统计
                 self._stats.update(execution_time, exception_occurred, is_async=True)
                 
-                # 异步处理告警
+                # 只有当执行时间超过阈值时才处理告警，减少不必要的开销
                 if execution_time > self.config.threshold_seconds:
+                    # 如果没有HTML报告，创建一个简单的报告
+                    if not html_report:
+                        html_report = f"<html><body><h1>性能报告</h1><p>执行时间: {execution_time:.3f}秒</p></body></html>"
                     await self._process_alert_async(context, execution_time, html_report)
                     
         except Exception as e:
@@ -112,7 +119,7 @@ class FastAPIMonitor(BaseWebMonitor):
         """异步处理告警"""
         try:
             request_info = context.get_request_info()
-            from .models import PerformanceMetrics
+            from ..models.models import PerformanceMetrics
             from datetime import datetime
             
             metrics = PerformanceMetrics(

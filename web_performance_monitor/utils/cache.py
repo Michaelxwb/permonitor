@@ -228,11 +228,22 @@ class CacheManager:
                 
                 for key, entry in self._cache.items():
                     if entry.timestamp >= cutoff_time:
-                        recent_alerts.append({
-                            'key': key,
-                            'timestamp': entry.timestamp,
-                            'data': entry.data
-                        })
+                        # 如果数据是告警记录字典，直接使用；否则包装在data字段中
+                        if isinstance(entry.data, dict) and 'notification_status' in entry.data:
+                            # 这是告警记录数据，直接使用
+                            alert_data = entry.data.copy()
+                            alert_data.update({
+                                'key': key,
+                                'timestamp': entry.timestamp
+                            })
+                            recent_alerts.append(alert_data)
+                        else:
+                            # 其他数据格式，包装在data字段中
+                            recent_alerts.append({
+                                'key': key,
+                                'timestamp': entry.timestamp,
+                                'data': entry.data
+                            })
                 
                 # 按时间排序（最新的在前）
                 recent_alerts.sort(key=lambda x: x['timestamp'], reverse=True)

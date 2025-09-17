@@ -4,6 +4,7 @@
 提供告警缓存管理，防止重复告警
 """
 
+import hashlib
 import logging
 import threading
 from datetime import datetime, timedelta
@@ -87,33 +88,18 @@ class CacheManager:
                 self.logger.error(f"标记告警缓存失败: {e}")
                 raise CacheError(f"标记告警缓存失败: {e}")
     
-    def generate_alert_key(self, endpoint: str, request_url: str, request_params: dict) -> str:
-        """生成告警缓存键，基于接口、URL和参数
+    def generate_alert_key(self, endpoint: str) -> str:
+        """生成告警缓存键，仅基于接口端点
         
         Args:
             endpoint: 接口端点
-            request_url: 请求URL
-            request_params: 请求参数
             
         Returns:
-            str: 生成的缓存键
-        """
-        import hashlib
-        import json
-        
+            str: 生成的缓存键（仅基于接口端点）
+        """        
         try:
-            # 创建包含关键信息的字符串
-            key_data = {
-                'endpoint': endpoint,
-                'request_url': request_url,
-                'request_params': request_params
-            }
-            
-            # 排序确保一致性
-            key_string = json.dumps(key_data, sort_keys=True, ensure_ascii=False)
-            
-            # 生成MD5哈希作为缓存键
-            cache_key = hashlib.md5(key_string.encode('utf-8')).hexdigest()
+            # 仅使用接口端点生成缓存键
+            cache_key = hashlib.md5(endpoint.encode('utf-8')).hexdigest()
             
             self.logger.debug(f"生成缓存键: {endpoint} -> {cache_key}")
             return cache_key
@@ -121,22 +107,18 @@ class CacheManager:
         except Exception as e:
             self.logger.error(f"生成缓存键失败: {e}")
             # 返回简化的键
-            return f"{endpoint}_{hash(str(request_params))}"
+            return endpoint
     
     def generate_metrics_key(self, metrics: PerformanceMetrics) -> str:
-        """从性能指标生成缓存键
+        """从性能指标生成缓存键，仅基于接口端点
         
         Args:
             metrics: 性能指标数据
             
         Returns:
-            str: 生成的缓存键
+            str: 生成的缓存键（仅基于接口端点）
         """
-        return self.generate_alert_key(
-            metrics.endpoint,
-            metrics.request_url,
-            metrics.request_params
-        )
+        return self.generate_alert_key(metrics.endpoint)
     
     def cleanup_expired_entries(self, window_days: int) -> int:
         """清理过期的缓存条目

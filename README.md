@@ -322,7 +322,7 @@ def generate_report(report_type, filters):
 | 配置项 | 默认值 | 说明 |
 |--------|--------|------|
 | threshold_seconds | 1.0 | 响应时间阈值（秒） |
-| alert_window_days | 10 | 重复告警时间窗口（天） |
+| alert_window_days | 10 | 重复告警时间窗口（天），基于接口端点去重 |
 | max_performance_overhead | 0.05 | 最大性能开销（5%） |
 | enable_local_file | true | 启用本地文件通知 |
 | local_output_dir | /tmp | 本地文件输出目录 |
@@ -341,7 +341,7 @@ def generate_report(report_type, filters):
 ```python
 config = Config(
     threshold_seconds=0.5,      # 开发环境阈值较低
-    alert_window_days=1,        # 短时间窗口
+    alert_window_days=1,        # 短时间窗口，基于接口端点去重
     enable_local_file=True,
     local_output_dir="./dev_reports",
     enable_mattermost=False,    # 开发环境不发送通知
@@ -370,7 +370,7 @@ config = Config(
 ```python
 config = Config(
     threshold_seconds=2.0,      # 生产环境阈值较高
-    alert_window_days=7,        # 较长的去重窗口
+    alert_window_days=7,        # 较长的去重窗口，基于接口端点去重
     max_performance_overhead=0.03,  # 更严格的性能要求
     enable_local_file=True,
     local_output_dir="/var/log/performance",

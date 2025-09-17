@@ -17,24 +17,24 @@ from ..utils.async_retry import AsyncRetryHandler
 
 class AsyncLocalFileNotifier:
     """异步本地文件通知器"""
-    
+
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
         self.logger = logging.getLogger(self.__class__.__name__)
-    
+
     async def send_notification_async(self, metrics: PerformanceMetrics, html_report: str) -> bool:
         """异步发送本地文件通知"""
         try:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"performance_alert_{timestamp}_{metrics.endpoint.replace('/', '_')}.html"
+            filename = f"peralert_{timestamp}_{metrics.endpoint.replace('/', '_')}.html"
             filepath = f"{self.output_dir}/{filename}"
-            
+
             async with aiofiles.open(filepath, 'w', encoding='utf-8') as f:
                 await f.write(html_report)
-            
+
             self.logger.info(f"异步本地文件通知已保存: {filepath}")
             return True
-            
+
         except Exception as e:
             self.logger.error(f"异步本地文件通知失败: {e}")
             return False
@@ -42,13 +42,13 @@ class AsyncLocalFileNotifier:
 
 class AsyncMattermostNotifier:
     """异步Mattermost通知器"""
-    
+
     def __init__(self, server_url: str, token: str, channel_id: str):
         self.server_url = server_url.rstrip('/')
         self.token = token
         self.channel_id = channel_id
         self.logger = logging.getLogger(self.__class__.__name__)
-    
+
     async def send_notification_async(self, metrics: PerformanceMetrics, html_report: str) -> bool:
         """异步发送Mattermost通知"""
         try:
@@ -63,7 +63,7 @@ class AsyncMattermostNotifier:
         except Exception as e:
             self.logger.error(f"异步Mattermost通知最终失败: {e}")
             return False
-    
+
     async def _send_mattermost_message(self, metrics: PerformanceMetrics, html_report: str) -> bool:
         """发送Mattermost消息"""
         url = f"{self.server_url}/api/v4/posts"
@@ -71,7 +71,7 @@ class AsyncMattermostNotifier:
             'Authorization': f'Bearer {self.token}',
             'Content-Type': 'application/json'
         }
-        
+
         message = f"""
 **性能告警** 🚨
 
@@ -83,12 +83,12 @@ class AsyncMattermostNotifier:
 
 详细性能报告已生成。
         """.strip()
-        
+
         data = {
             'channel_id': self.channel_id,
             'message': message
         }
-        
+
         async with aiohttp.ClientSession() as session:
             async with session.post(url, headers=headers, json=data) as response:
                 if response.status == 201:

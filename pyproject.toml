@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "web-performance-monitor"
-version = "1.2.0"
+version = "1.2.1"
 description = "基于pyinstrument的Web应用性能监控和告警工具，支持Flask和FastAPI"
 readme = "README.md"
 license = {text = "MIT"}
@@ -35,15 +35,21 @@ classifiers = [
 requires-python = ">=3.7"
 dependencies = [
     "pyinstrument>=4.0.0",
-    "flask>=2.0.0",
     "requests>=2.25.0",
-    "mattermostdriver>=7.0.0",
 ]
 
 [project.optional-dependencies]
+flask = [
+    "flask>=2.0.0",
+]
 fastapi = [
     "fastapi>=0.100.0",
     "uvicorn>=0.20.0",
+    "aiofiles>=24.1.0",
+    "aiohttp>=3.12.0",
+]
+notifications = [
+    "mattermostdriver>=7.0.0",
 ]
 dev = [
     "pytest>=6.0.0",
@@ -53,13 +59,19 @@ dev = [
     "black>=22.0.0",
     "flake8>=4.0.0",
     "mypy>=0.950",
+    "flask>=2.0.0",
     "fastapi>=0.100.0",
     "uvicorn>=0.20.0",
+    "aiofiles>=24.1.0",
+    "aiohttp>=3.12.0",
 ]
 all = [
-    "mattermostdriver>=7.0.0",
+    "flask>=2.0.0",
     "fastapi>=0.100.0",
     "uvicorn>=0.20.0",
+    "aiofiles>=24.1.0",
+    "aiohttp>=3.12.0",
+    "mattermostdriver>=7.0.0",
 ]
 
 [project.urls]

@@ -228,7 +228,6 @@ tmp/
 temp/
 
 # IDE and editor files
-.kiro/
 *.swp
 *.swo
 *~

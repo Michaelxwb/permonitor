@@ -132,6 +132,14 @@ class AsyncAlertManager(BaseAlertManager):
             
             try:
                 return await self._process_alert_with_retry(metrics, html_report, alert_key)
+            except asyncio.CancelledError:
+                self.logger.warning(f"告警处理被取消: {alert_key}")
+                self._alert_stats['cancelled'] = self._alert_stats.get('cancelled', 0) + 1
+                return None
+            except Exception as e:
+                self.logger.error(f"处理异步告警异常: {e}")
+                self._alert_stats['failed'] += 1
+                return None
             finally:
                 self._active_alerts.discard(alert_key)
     
@@ -139,14 +147,18 @@ class AsyncAlertManager(BaseAlertManager):
                                       html_report: str, alert_key: str) -> Optional[AlertRecord]:
         """带重试机制的告警处理"""
         from ..utils.async_retry import AsyncRetryHandler
+        from ..exceptions.async_error_handler import AsyncErrorHandler
         
         max_retries = getattr(self.config, 'alert_max_retries', 3)
         retry_delay = getattr(self.config, 'alert_retry_delay', 1.0)
+        timeout = getattr(self.config, 'fastapi_async_timeout', 30.0)  # 默认30秒超时
         
         try:
-            # 使用异步重试机制发送通知
-            success = await AsyncRetryHandler.retry_async_operation(
-                self._send_notifications_safe,
+            # 使用异步重试机制发送通知，增加超时控制
+            success = await AsyncErrorHandler.safe_execute_with_timeout(
+                AsyncRetryHandler.retry_async_operation,
+                timeout=timeout,
+                operation=self._send_notifications_safe,
                 max_retries=max_retries,
                 delay=retry_delay,
                 backoff_factor=2.0,
@@ -175,6 +187,10 @@ class AsyncAlertManager(BaseAlertManager):
                 self.logger.error(f"告警处理最终失败: {alert_key}")
                 return None
                 
+        except asyncio.TimeoutError:
+            self._alert_stats['timed_out'] = self._alert_stats.get('timed_out', 0) + 1
+            self.logger.error(f"告警处理超时: {alert_key}")
+            return None
         except Exception as e:
             self._alert_stats['failed'] += 1
             self.logger.error(f"处理异步告警异常: {e}")
@@ -186,6 +202,7 @@ class AsyncAlertManager(BaseAlertManager):
             return await self.notification_manager.send_notifications_async(metrics, html_report)
         except Exception as e:
             self.logger.warning(f"通知发送失败，将重试: {e}")
+            self._alert_stats['retried'] = self._alert_stats.get('retried', 0) + 1
             raise  # 重新抛出异常以触发重试
     
     async def process_multiple_alerts_async(self, alerts_data: list) -> list:
@@ -224,7 +241,7 @@ class AsyncAlertManager(BaseAlertManager):
         return {
             **self._alert_stats,
             'active_alerts': len(self._active_alerts),
-            'semaphore_available': self.alert_semaphore._value,
+            'semaphore_available': self.alert_semaphore._value if hasattr(self.alert_semaphore, '_value') else None,
             'max_concurrent': getattr(self.config, 'fastapi_max_concurrent_alerts', 10)
         }
     

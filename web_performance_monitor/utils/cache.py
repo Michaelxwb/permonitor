@@ -29,6 +29,9 @@ class CacheManager:
         self._lock = threading.RLock()  # 线程安全
         self._max_entries = max_entries
         self.logger = logging.getLogger(__name__)
+        # 添加LRU缓存策略支持
+        self._access_order = []  # 访问顺序列表
+        self._max_memory_entries = max_entries
     
     def is_recently_alerted(self, key: str, window_days: int = 10) -> bool:
         """检查是否在配置的时间窗口内（默认10天）已告警
@@ -50,8 +53,15 @@ class CacheManager:
                 if entry.is_expired(window_days):
                     # 清理过期条目
                     del self._cache[key]
+                    if key in self._access_order:
+                        self._access_order.remove(key)
                     self.logger.debug(f"清理过期缓存条目: {key}")
                     return False
+                
+                # 更新访问顺序（LRU策略）
+                if key in self._access_order:
+                    self._access_order.remove(key)
+                self._access_order.append(key)
                 
                 self.logger.debug(f"发现重复告警: {key}")
                 return True
@@ -69,11 +79,16 @@ class CacheManager:
         """
         with self._lock:
             try:
+                # 更新访问顺序（LRU策略）
+                if key in self._access_order:
+                    self._access_order.remove(key)
+                self._access_order.append(key)
+                
                 # 检查是否超过最大条目数
                 if len(self._cache) >= self._max_entries:
-                    # 清理最旧的条目（清理10%的条目）
+                    # 使用LRU策略清理条目
                     cleanup_count = max(1, self._max_entries // 10)
-                    self._cleanup_oldest_entries(cleanup_count)
+                    self._cleanup_lru_entries(cleanup_count)
                     self.logger.info(f"缓存条目达到上限，清理了 {cleanup_count} 个最旧条目")
                 
                 entry = CacheEntry(
@@ -271,8 +286,8 @@ class CacheManager:
                 self.logger.error(f"删除缓存条目失败: {e}")
                 return False
     
-    def _cleanup_oldest_entries(self, count: int) -> int:
-        """清理最旧的缓存条目
+    def _cleanup_lru_entries(self, count: int) -> int:
+        """使用LRU策略清理缓存条目
         
         Args:
             count: 要清理的条目数量
@@ -281,26 +296,21 @@ class CacheManager:
             int: 实际清理的条目数量
         """
         try:
-            if not self._cache:
+            if not self._cache or not self._access_order:
                 return 0
             
-            # 按时间戳排序，获取最旧的条目
-            sorted_entries = sorted(
-                self._cache.items(),
-                key=lambda x: x[1].timestamp
-            )
-            
-            # 删除最旧的条目
-            cleanup_count = min(count, len(sorted_entries))
+            # 按LRU顺序清理条目（最久未使用的在前）
+            cleanup_count = min(count, len(self._access_order))
             for i in range(cleanup_count):
-                key = sorted_entries[i][0]
-                del self._cache[key]
+                key = self._access_order.pop(0)  # 移除最久未使用的
+                if key in self._cache:
+                    del self._cache[key]
             
-            self.logger.debug(f"清理了 {cleanup_count} 个最旧的缓存条目")
+            self.logger.debug(f"使用LRU策略清理了 {cleanup_count} 个缓存条目")
             return cleanup_count
             
         except Exception as e:
-            self.logger.error(f"清理最旧条目失败: {e}")
+            self.logger.error(f"LRU清理失败: {e}")
             return 0
     
     def get_cache_size_info(self) -> Dict[str, Any]:

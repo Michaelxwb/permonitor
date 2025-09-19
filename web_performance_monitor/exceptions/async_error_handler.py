@@ -36,7 +36,7 @@ class AsyncErrorHandler:
             return await asyncio.wait_for(coro_func(*args, **kwargs), timeout=timeout)
         except asyncio.TimeoutError:
             logger.error(f"异步操作超时 ({timeout}s): {coro_func.__name__}")
-            return None
+            raise  # 重新抛出超时异常，让调用者能够处理
         except Exception as e:
             logger.error(f"异步操作异常 {coro_func.__name__}: {e}")
             return None

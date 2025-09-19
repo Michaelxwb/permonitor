@@ -12,6 +12,7 @@ from typing import Callable, Any, Optional, Dict
 from urllib.parse import parse_qs, urlparse
 from ..config.config import Config
 from ..utils.analyzer import PerformanceAnalyzer, PerformanceOverheadTracker, TimingContext
+from ..utils.smart_analyzer import SmartPerformanceAnalyzer
 from ..alerts.alerts import AlertManager
 from ..models.models import PerformanceMetrics
 from ..exceptions.exceptions import PerformanceMonitorError, ProfilingError
@@ -39,7 +40,10 @@ class PerformanceMonitor:
         self.logger = self.perf_logger.get_logger()
         
         # 初始化组件
-        self.analyzer = PerformanceAnalyzer()
+        self.analyzer = SmartPerformanceAnalyzer(
+            sampling_rate=config.smart_sampling_rate or 0.1,
+            min_requests_before_profiling=config.min_requests_before_profiling or 5
+        )
         self.alert_manager = AlertManager(config)
         self.overhead_tracker = PerformanceOverheadTracker()
         
@@ -102,17 +106,18 @@ class PerformanceMonitor:
         # 提取请求信息
         request_info = self._extract_request_info(environ)
         
+        # 智能决定是否进行分析
+        should_profile = self.analyzer.should_profile(request_info)
+        
         # 开始监控
-        profiler = None
+        profiling_context = None
         start_time = time.perf_counter()
         status_code = [200]  # 默认状态码
         
         try:
-            # 启动性能分析
-            profiler = safe_execute(self.analyzer.start_profiling)
-            if not profiler:
-                # 如果分析器启动失败，直接执行原应用
-                return app(environ, start_response)
+            # 启动性能分析（仅在需要时）
+            if should_profile:
+                profiling_context = safe_execute(self.analyzer.start_profiling)
             
             def custom_start_response(status, headers, exc_info=None):
                 """自定义响应函数，捕获状态码"""
@@ -137,14 +142,14 @@ class PerformanceMonitor:
             # 设置错误状态码
             status_code[0] = 500
             # 确保异常不影响原应用
-            if profiler:
-                safe_execute(self.analyzer.stop_profiling, profiler)
+            if profiling_context:
+                safe_execute(self.analyzer.stop_profiling, profiling_context)
             raise
         
         finally:
             # 完成监控处理
             self._finalize_request_monitoring(
-                profiler, start_time, request_info, status_code[0]
+                profiling_context, start_time, request_info, status_code[0], should_profile
             )
     
     def _monitor_function(self, func: Callable, *args, **kwargs) -> Any:
@@ -174,17 +179,18 @@ class PerformanceMonitor:
             'request_method': 'FUNCTION'
         }
         
-        profiler = None
+        # 智能决定是否进行分析
+        should_profile = self.analyzer.should_profile(func_info)
+        
+        profiling_context = None
         start_time = time.perf_counter()
         result = None
         exception_occurred = False
         
         try:
-            # 启动性能分析
-            profiler = safe_execute(self.analyzer.start_profiling)
-            if not profiler:
-                # 如果分析器启动失败，直接执行原函数
-                return func(*args, **kwargs)
+            # 启动性能分析（仅在需要时）
+            if should_profile:
+                profiling_context = safe_execute(self.analyzer.start_profiling)
             
             # 执行原函数
             result = func(*args, **kwargs)
@@ -197,7 +203,7 @@ class PerformanceMonitor:
             # 完成监控处理
             status_code = 500 if exception_occurred else 200
             self._finalize_function_monitoring(
-                profiler, start_time, func_info, status_code
+                profiling_context, start_time, func_info, status_code, should_profile
             )
         
         # 返回函数执行结果
@@ -321,14 +327,15 @@ class PerformanceMonitor:
                 'request_method': 'GET'
             }
     
-    def _finalize_request_monitoring(self, profiler, start_time: float, request_info: dict, status_code: int) -> None:
+    def _finalize_request_monitoring(self, profiling_context, start_time: float, request_info: dict, status_code: int, was_profiled: bool) -> None:
         """完成请求监控处理
         
         Args:
-            profiler: 性能分析器实例
+            profiling_context: 分析上下文
             start_time: 开始时间
             request_info: 请求信息
             status_code: 响应状态码
+            was_profiled: 是否进行了分析
         """
         try:
             end_time = time.perf_counter()
@@ -337,34 +344,44 @@ class PerformanceMonitor:
             # 更新统计
             self._total_requests += 1
             
-            if profiler:
+            # 获取执行时间
+            execution_time = 0.0
+            html_report = None
+            
+            if profiling_context:
                 # 停止性能分析
-                html_report = safe_execute(self.analyzer.stop_profiling, profiler)
-                execution_time = safe_execute(self.analyzer.get_execution_time, profiler)
+                html_report = safe_execute(self.analyzer.stop_profiling, profiling_context)
+                execution_time = safe_execute(self.analyzer.get_execution_time, profiling_context)
                 
                 # 如果无法从profiler获取时间，使用总时间
                 if execution_time is None or execution_time <= 0:
                     execution_time = total_time
                     self.logger.debug(f"使用总时间作为执行时间: {execution_time:.4f}s")
-                
-                # 跟踪性能开销
-                self.overhead_tracker.track_overhead(execution_time, total_time)
-                
-                # 检查性能开销是否超标
-                if self.overhead_tracker.check_overhead_threshold(self.config.max_performance_overhead):
-                    self.logger.warning("性能监控开销超过阈值，考虑调整配置")
-                
-                # 记录请求完成
-                self.perf_logger.log_request_end(
-                    request_info['endpoint'], 
-                    request_info['request_method'], 
-                    execution_time, 
-                    status_code,
-                    execution_time > self.config.threshold_seconds
-                )
-                
-                # 处理性能指标 - 即使没有HTML报告也要处理
-                # 如果没有HTML报告，创建一个简单的报告
+            else:
+                # 没有分析时，使用总时间
+                execution_time = total_time
+            
+            # 记录请求信息（用于智能分析）
+            self.analyzer.record_request(request_info, execution_time, was_profiled)
+            
+            # 跟踪性能开销
+            self.overhead_tracker.track_overhead(execution_time, total_time)
+            
+            # 检查性能开销是否超标
+            if self.overhead_tracker.check_overhead_threshold(self.config.max_performance_overhead):
+                self.logger.warning("性能监控开销超过阈值，考虑调整配置")
+            
+            # 记录请求完成
+            self.perf_logger.log_request_end(
+                request_info['endpoint'], 
+                request_info['request_method'], 
+                execution_time, 
+                status_code,
+                execution_time > self.config.threshold_seconds
+            )
+            
+            # 处理性能指标 - 仅在需要时生成HTML报告
+            if execution_time > self.config.threshold_seconds or was_profiled:
                 if not html_report:
                     html_report = f"<html><body><h1>性能报告</h1><p>执行时间: {execution_time:.3f}秒</p></body></html>"
                 
@@ -375,14 +392,15 @@ class PerformanceMonitor:
         except Exception as e:
             self.logger.error(f"完成请求监控处理失败: {e}")
     
-    def _finalize_function_monitoring(self, profiler, start_time: float, func_info: dict, status_code: int) -> None:
+    def _finalize_function_monitoring(self, profiling_context, start_time: float, func_info: dict, status_code: int, was_profiled: bool) -> None:
         """完成函数监控处理
         
         Args:
-            profiler: 性能分析器实例
+            profiling_context: 分析上下文
             start_time: 开始时间
             func_info: 函数信息
             status_code: 状态码
+            was_profiled: 是否进行了分析
         """
         try:
             end_time = time.perf_counter()
@@ -391,24 +409,37 @@ class PerformanceMonitor:
             # 更新统计
             self._total_requests += 1
             
-            if profiler:
+            # 获取执行时间
+            execution_time = 0.0
+            html_report = None
+            
+            if profiling_context:
                 # 停止性能分析
-                html_report = safe_execute(self.analyzer.stop_profiling, profiler)
-                execution_time = safe_execute(self.analyzer.get_execution_time, profiler)
+                html_report = safe_execute(self.analyzer.stop_profiling, profiling_context)
+                execution_time = safe_execute(self.analyzer.get_execution_time, profiling_context)
                 
                 # 如果无法从profiler获取时间，使用总时间
                 if execution_time is None or execution_time <= 0:
                     execution_time = total_time
                     self.logger.debug(f"使用总时间作为执行时间: {execution_time:.4f}s")
+            else:
+                # 没有分析时，使用总时间
+                execution_time = total_time
+            
+            # 记录请求信息（用于智能分析）
+            self.analyzer.record_request(func_info, execution_time, was_profiled)
+            
+            # 跟踪性能开销
+            self.overhead_tracker.track_overhead(execution_time, total_time)
+            
+            # 处理性能指标（仅在需要时）
+            if execution_time > self.config.threshold_seconds or was_profiled:
+                if not html_report:
+                    html_report = f"<html><body><h1>函数性能报告</h1><p>执行时间: {execution_time:.3f}秒</p></body></html>"
                 
-                # 跟踪性能开销
-                self.overhead_tracker.track_overhead(execution_time, total_time)
-                
-                # 处理性能指标
-                if html_report:
-                    self._process_performance_metrics(
-                        func_info, execution_time, status_code, html_report
-                    )
+                self._process_performance_metrics(
+                    func_info, execution_time, status_code, html_report
+                )
             
         except Exception as e:
             self.logger.error(f"完成函数监控处理失败: {e}")

@@ -5,6 +5,8 @@
 """
 
 import os
+import json
+import logging
 from dataclasses import dataclass, field
 from typing import Dict, Any, Optional
 
@@ -26,6 +28,41 @@ class UnifiedConfig(Config):
     # 告警重试配置
     alert_max_retries: int = 3
     alert_retry_delay: float = 1.0
+    
+    @classmethod
+    def from_env(cls) -> 'UnifiedConfig':
+        """从环境变量加载配置"""
+        logger = logging.getLogger(__name__)
+        
+        # 基础配置
+        config_dict = {
+            'threshold_seconds': float(os.getenv('PERF_THRESHOLD_SECONDS', '1.0')),
+            'alert_window_days': int(os.getenv('PERF_ALERT_WINDOW_DAYS', '10')),
+            'max_performance_overhead': float(os.getenv('PERF_MAX_OVERHEAD', '0.05')),
+            'smart_sampling_rate': float(os.getenv('PERF_SMART_SAMPLING_RATE', '0.1')),
+            'min_requests_before_profiling': int(os.getenv('PERF_MIN_REQUESTS_BEFORE_PROFILING', '5')),
+            'enable_adaptive_sampling': os.getenv('PERF_ENABLE_ADAPTIVE_SAMPLING', 'true').lower() == 'true',
+            'enable_local_file': os.getenv('PERF_ENABLE_LOCAL_FILE', 'true').lower() == 'true',
+            'local_output_dir': os.getenv('PERF_LOCAL_OUTPUT_DIR', '/tmp'),
+            'enable_mattermost': os.getenv('PERF_ENABLE_MATTERMOST', 'false').lower() == 'true',
+            'mattermost_server_url': os.getenv('PERF_MATTERMOST_SERVER_URL', ''),
+            'mattermost_token': os.getenv('PERF_MATTERMOST_TOKEN', ''),
+            'mattermost_channel_id': os.getenv('PERF_MATTERMOST_CHANNEL_ID', ''),
+            'mattermost_max_retries': int(os.getenv('PERF_MATTERMOST_MAX_RETRIES', '3')),
+            'log_level': os.getenv('PERF_LOG_LEVEL', 'INFO'),
+            'enable_url_blacklist': os.getenv('PERF_ENABLE_URL_BLACKLIST', 'true').lower() == 'true',
+            'url_blacklist': json.loads(os.getenv('PERF_URL_BLACKLIST', '[]')),
+            'fastapi_async_timeout': float(os.getenv('PERF_FASTAPI_ASYNC_TIMEOUT', '30.0')),
+            'fastapi_concurrent_notifications': os.getenv('PERF_FASTAPI_CONCURRENT_NOTIFICATIONS', 'true').lower() == 'true',
+            'fastapi_max_concurrent_alerts': int(os.getenv('PERF_FASTAPI_MAX_CONCURRENT_ALERTS', '10')),
+            'flask_wsgi_buffer_size': int(os.getenv('PERF_FLASK_WSGI_BUFFER_SIZE', '8192')),
+            'flask_request_body_limit': int(os.getenv('PERF_FLASK_REQUEST_BODY_LIMIT', '10240')),
+            'alert_max_retries': int(os.getenv('PERF_ALERT_MAX_RETRIES', '3')),
+            'alert_retry_delay': float(os.getenv('PERF_ALERT_RETRY_DELAY', '1.0')),
+        }
+        
+        logger.info("配置已从环境变量加载")
+        return cls.from_dict(config_dict)
     
     # Flask特定配置
     flask_wsgi_buffer_size: int = 8192

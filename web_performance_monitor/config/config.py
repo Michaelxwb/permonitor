@@ -24,6 +24,11 @@ class Config:
     threshold_seconds: float = 1.0                      # 默认1秒阈值
     alert_window_days: int = 10                         # 默认10天重复告警窗口
     max_performance_overhead: float = 0.05              # 最大5%性能开销
+    
+    # 智能分析器配置
+    smart_sampling_rate: float = 0.1                    # 智能采样率 (10%)
+    min_requests_before_profiling: int = 5              # 开始分析前的最小请求数
+    enable_adaptive_sampling: bool = True               # 启用自适应采样
 
     # 本地文件配置
     enable_local_file: bool = True                      # 默认启用本地文件通知
@@ -127,6 +132,16 @@ class Config:
         if not isinstance(self.max_performance_overhead, (int, float)) or not (0 < self.max_performance_overhead <= 1):
             logger.warning(f"性能开销配置无效，使用默认值5%: {self.max_performance_overhead}")
             self.max_performance_overhead = 0.05
+        
+        # 验证智能采样率
+        if not isinstance(self.smart_sampling_rate, (int, float)) or not (0 <= self.smart_sampling_rate <= 1):
+            logger.warning(f"智能采样率配置无效，使用默认值10%: {self.smart_sampling_rate}")
+            self.smart_sampling_rate = 0.1
+        
+        # 验证最小请求数
+        if not isinstance(self.min_requests_before_profiling, int) or self.min_requests_before_profiling < 0:
+            logger.warning(f"最小请求数配置无效，使用默认值5: {self.min_requests_before_profiling}")
+            self.min_requests_before_profiling = 5
         
         # 验证重试次数
         if not isinstance(self.mattermost_max_retries, int) or self.mattermost_max_retries < 0:

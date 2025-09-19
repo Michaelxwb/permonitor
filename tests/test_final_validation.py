@@ -18,6 +18,11 @@ from flask import Flask, jsonify, request
 from web_performance_monitor import PerformanceMonitor, Config
 from web_performance_monitor.models.models import PerformanceMetrics
 from web_performance_monitor.exceptions.exceptions import PerformanceMonitorError
+from tests.smart_test_framework import (
+    SmartPerformanceTester, 
+    assert_performance_overhead,
+    create_test_config_for_overhead_testing
+)
 
 
 class TestPerformanceOverheadRequirements:

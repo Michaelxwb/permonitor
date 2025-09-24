@@ -18,7 +18,7 @@ from web_performance_monitor import PerformanceMonitor, Config
 config = Config(
     threshold_seconds=0.5,
     enable_local_file=True,
-    local_output_dir="./pyramid_reports",
+    local_output_dir="../reports/pyramid_reports",
     enable_mattermost=False,
     log_level="INFO"
 )
@@ -126,10 +126,10 @@ def stats_view(request):
 # 自定义中间件
 class PerformanceMonitoringMiddleware:
     """性能监控中间件"""
-    
+
     def __init__(self, app):
         self.app = app
-    
+
     def __call__(self, environ, start_response):
         """WSGI中间件实现"""
         # 使用WSGI中间件
@@ -141,7 +141,7 @@ def create_wsgi_app():
     """创建WSGI应用"""
     # 配置Pyramid
     config = Configurator()
-    
+
     # 添加路由
     config.add_route('index', '/')
     config.add_route('slow', '/slow')
@@ -149,16 +149,16 @@ def create_wsgi_app():
     config.add_route('calculate', '/calculate')
     config.add_route('health', '/health')
     config.add_route('stats', '/stats')
-    
+
     # 扫描视图（装饰器方式）
     config.scan()
-    
+
     # 创建WSGI应用
     app = config.make_wsgi_app()
-    
+
     # 应用性能监控中间件
     app = PerformanceMonitoringMiddleware(app)
-    
+
     return app
 
 
@@ -173,18 +173,18 @@ def main():
     print("  http://localhost:6543/health - 健康检查")
     print("  http://localhost:6543/stats - 监控统计")
     print("\n性能报告将保存在 ./pyramid_reports/ 目录")
-    
+
     # 创建应用
     app = create_wsgi_app()
-    
+
     # 启动服务器
     from wsgiref.simple_server import make_server
     port = 6543
     server = make_server('0.0.0.0', port, app)
-    
+
     print(f"\n服务器启动在 http://localhost:{port}")
     print("按 Ctrl+C 停止服务器")
-    
+
     try:
         server.serve_forever()
     except KeyboardInterrupt:

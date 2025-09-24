@@ -257,7 +257,7 @@ class NotificationFormatter:
         """生成包含时间戳和接口信息的唯一文件名"""
         timestamp = metrics.timestamp.strftime('%Y%m%d_%H%M%S')
         safe_endpoint = metrics.endpoint.replace('/', '_').replace('<', '').replace('>', '')
-        return f"peralert_{safe_endpoint}_{timestamp}.html"
+        return f"peralert_{safe_endpoint}.html"
 ```
 
 ### 5. 配置管理

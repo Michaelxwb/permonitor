@@ -15,7 +15,7 @@ config = Config(
     threshold_seconds=0.5,  # 0.5秒阈值（更敏感）
     alert_window_days=1,  # 1天重复告警窗口
     enable_local_file=True,  # 启用本地文件通知
-    local_output_dir="./function_reports",  # 函数报告目录
+    local_output_dir="../reports/function_reports",  # 函数报告目录
     enable_mattermost=False,  # 禁用Mattermost
     log_level="INFO"
 )

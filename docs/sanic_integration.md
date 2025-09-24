@@ -70,7 +70,7 @@ if __name__ == '__main__':
 |--------|------|--------|
 | `threshold_seconds` | 响应时间阈值，超过此值触发告警 | 1.0 |
 | `enable_local_file` | 是否启用本地文件报告 | True |
-| `local_output_dir` | 性能报告输出目录 | "./reports" |
+| `local_output_dir` | 性能报告输出目录 | "../reports" |
 | `enable_mattermost` | 是否启用Mattermost通知 | False |
 | `log_level` | 日志级别 | "INFO" |
 

@@ -18,7 +18,7 @@ from web_performance_monitor import PerformanceMonitor, Config
 config = Config(
     threshold_seconds=0.5,
     enable_local_file=True,
-    local_output_dir="./tornado_reports",
+    local_output_dir="../reports/tornado_reports",
     enable_mattermost=False,
     log_level="INFO"
 )

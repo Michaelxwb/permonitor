@@ -86,9 +86,6 @@ class NotificationFormatter:
         Returns:
             str: 生成的文件名
         """
-        # 生成时间戳（包含毫秒）
-        timestamp = metrics.timestamp.strftime('%Y%m%d_%H%M%S_%f')[:-3]
-
         # 清理端点名称，移除特殊字符
         safe_endpoint = (metrics.endpoint
                          .replace('/', '_')
@@ -105,7 +102,7 @@ class NotificationFormatter:
         if len(safe_endpoint) > 50:
             safe_endpoint = safe_endpoint[:50]
 
-        return f"peralert_{safe_endpoint}_{timestamp}.{extension}"
+        return f"peralert_{safe_endpoint}.{extension}"
 
     @staticmethod
     def format_log_message(metrics: PerformanceMetrics, file_path: str = None) -> str:

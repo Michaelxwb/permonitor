@@ -21,7 +21,7 @@ def create_app():
         threshold_seconds=1.0,  # 1秒阈值
         alert_window_days=1,  # 1天重复告警窗口（用于演示）
         enable_local_file=True,  # 启用本地文件通知
-        local_output_dir="./performance_reports",  # 输出到当前目录
+        local_output_dir="../reports/performance_reports",  # 输出到当前目录
         enable_mattermost=False,  # 禁用Mattermost（演示用）
         log_level="INFO"
     )

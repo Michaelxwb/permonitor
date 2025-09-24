@@ -23,7 +23,7 @@ def create_advanced_app():
 
         # 本地文件通知
         enable_local_file=True,
-        local_output_dir="./advanced_reports",
+        local_output_dir="../reports/advanced_reports",
 
         # Mattermost通知（如果配置了环境变量）
         enable_mattermost=bool(os.getenv('MATTERMOST_SERVER_URL')),
@@ -205,7 +205,7 @@ def main():
     app, monitor = create_advanced_app()
 
     # 确保报告目录存在
-    os.makedirs("./advanced_reports", exist_ok=True)
+    os.makedirs("../reports/advanced_reports", exist_ok=True)
 
     print("📊 配置信息:")
     config_info = monitor.config.get_effective_config()

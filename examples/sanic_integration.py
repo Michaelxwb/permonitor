@@ -21,7 +21,7 @@ except ImportError as e:
 config = Config(
     threshold_seconds=0.5,
     enable_local_file=True,
-    local_output_dir="./sanic_reports",
+    local_output_dir="../reports/sanic_reports",
     enable_mattermost=False,
     log_level="INFO"
 )
@@ -127,7 +127,7 @@ async def calculate(request):
         data = request.json
         if not data or 'numbers' not in data:
             return json({"error": "缺少numbers字段"}, status=400)
-        
+
         result = process_business_logic(data['numbers'])
         return json(result)
     except Exception as e:
@@ -143,15 +143,15 @@ async def get_stats(request):
     """获取监控统计信息"""
     import json as json_lib
     from datetime import datetime, date
-    
+
     stats = monitor.get_stats()
-    
+
     # 自定义JSON序列化函数
     def json_serial(obj):
         if isinstance(obj, (datetime, date)):
             return obj.isoformat()
         raise TypeError(f"Type {type(obj)} not serializable")
-    
+
     # 处理所有可能的datetime对象
     def process_datetime_fields(data):
         if isinstance(data, dict):
@@ -167,10 +167,10 @@ async def get_stats(request):
                         elif isinstance(item, dict):
                             process_datetime_fields(item)
         return data
-    
+
     # 处理datetime字段
     stats = process_datetime_fields(stats)
-    
+
     # 返回JSON响应
     return json(stats, dumps=lambda obj: json_lib.dumps(obj, default=json_serial))
 
@@ -185,6 +185,6 @@ if __name__ == "__main__":
     print("  http://localhost:8000/stats - 监控统计")
     print("\n性能报告将保存在 ./sanic_reports/ 目录")
     print("\n启动命令: python sanic_integration.py")
-    
+
     # 运行Sanic应用
     app.run(host="127.0.0.1", port=8002, debug=False, single_process=True)

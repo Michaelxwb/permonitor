@@ -17,7 +17,7 @@ app = Flask(__name__)
 monitor = quick_setup(
     threshold_seconds=1.0,  # 1秒阈值
     enable_local_file=True,  # 启用本地文件通知
-    local_output_dir="./reports"  # 报告输出目录
+    local_output_dir="../reports/quick_reports"  # 报告输出目录
 )
 
 # 应用中间件
@@ -50,6 +50,6 @@ def slow():
 if __name__ == '__main__':
     print("🚀 快速开始示例")
     print("访问 http://localhost:5000/slow 触发告警")
-    print("报告将保存到 ./reports/ 目录")
+    print("报告将保存到 ../reports/ 目录")
 
     app.run(debug=True, port=5000)

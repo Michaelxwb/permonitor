@@ -186,14 +186,14 @@ async def error_endpoint(request):
 
 性能报告保存在配置的目录中，文件名为：
 ```
-performance_alert_<endpoint>_<timestamp>.html
+peralert_<endpoint>_<timestamp>.html
 ```
 
 示例：
 ```
-performance_alert__slow_20250924_215202_186.html
-performance_alert__calculate_20250924_215203_301.html
-performance_alert___main__.process_business_logic_20250924_215203_299.html
+peralert__slow_20250924_215202_186.html
+peralert__calculate_20250924_215203_301.html
+peralert___main__.process_business_logic_20250924_215203_299.html
 ```
 
 ### 报告内容
@@ -208,7 +208,7 @@ performance_alert___main__.process_business_logic_20250924_215203_299.html
 
 直接在浏览器中打开HTML文件：
 ```bash
-open sanic_reports/performance_alert__slow_20250924_215202_186.html
+open sanic_reports/peralert__slow_20250924_215202_186.html
 ```
 
 ## 🧪 测试验证

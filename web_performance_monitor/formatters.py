@@ -105,7 +105,7 @@ class NotificationFormatter:
         if len(safe_endpoint) > 50:
             safe_endpoint = safe_endpoint[:50]
 
-        return f"performance_alert_{safe_endpoint}_{timestamp}.{extension}"
+        return f"peralert_{safe_endpoint}_{timestamp}.{extension}"
 
     @staticmethod
     def format_log_message(metrics: PerformanceMetrics, file_path: str = None) -> str:

@@ -171,7 +171,7 @@ class LocalFileNotifier(BaseNotifier):
                 return 0
             
             for filename in os.listdir(self.output_dir):
-                if not filename.startswith('performance_alert_'):
+                if not filename.startswith('peralert_'):
                     continue
                 
                 file_path = os.path.join(self.output_dir, filename)
@@ -215,7 +215,7 @@ class LocalFileNotifier(BaseNotifier):
             recent_files = []
             
             for filename in os.listdir(self.output_dir):
-                if not filename.startswith('performance_alert_'):
+                if not filename.startswith('peralert_'):
                     continue
                 
                 file_path = os.path.join(self.output_dir, filename)
@@ -258,7 +258,7 @@ class LocalFileNotifier(BaseNotifier):
             file_count = 0
             
             for filename in os.listdir(self.output_dir):
-                if filename.startswith('performance_alert_'):
+                if filename.startswith('peralert_'):
                     file_path = os.path.join(self.output_dir, filename)
                     try:
                         total_size += os.path.getsize(file_path)

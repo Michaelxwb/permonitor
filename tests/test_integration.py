@@ -548,7 +548,7 @@ class TestEndToEndAlertFlow:
         
         # 检查文件名格式
         html_file = html_files[0]
-        assert 'performance_alert_' in html_file
+        assert 'peralert_' in html_file
         assert html_file.endswith('.html')
         
         # 检查文件内容

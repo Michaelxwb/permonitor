@@ -87,6 +87,6 @@ temp/
 logs/
 
 # Performance reports (these are generated at runtime)
-performance_alert_*.html
+peralert_*.html
 test_output/
 test_reports/

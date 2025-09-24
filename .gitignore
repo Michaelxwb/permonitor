@@ -197,8 +197,8 @@ logs/
 *.backup
 
 # Performance monitoring output files
-/tmp/performance_alert_*.html
-performance_alert_*.html
+/tmp/peralert_*.html
+peralert_*.html
 
 # Local development files
 .env.local

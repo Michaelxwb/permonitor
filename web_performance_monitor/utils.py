@@ -203,7 +203,7 @@ def generate_filename(metrics: PerformanceMetrics) -> str:
                      .replace('&', '_')
                      .replace('=', '_'))
 
-    return f"performance_alert_{safe_endpoint}_{timestamp}.html"
+    return f"peralert_{safe_endpoint}_{timestamp}.html"
 
 
 def setup_logging(level: str = "INFO") -> logging.Logger:

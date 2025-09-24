@@ -36,10 +36,10 @@ dependencies = [
     "pyinstrument>=4.0.0",
     "flask>=2.0.0",
     "requests>=2.25.0",
+    "mattermostdriver>=7.0.0",
 ]
 
 [project.optional-dependencies]
-mattermost = ["mattermostdriver>=7.0.0"]
 dev = [
     "pytest>=6.0.0",
     "pytest-mock>=3.0.0",

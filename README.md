@@ -29,11 +29,30 @@ pip install web-performance-monitor
 # 包含Mattermost支持
 pip install web-performance-monitor[mattermost]
 
+# 包含Sanic框架支持
+pip install web-performance-monitor[sanic]
+
+# 包含所有可选功能
+pip install web-performance-monitor[all]
+
 # 开发环境安装
 pip install web-performance-monitor[dev]
 ```
 
 ### 5分钟快速接入
+
+#### 支持的框架
+
+- ✅ **Flask** - WSGI中间件模式（推荐）
+- ✅ **Django** - WSGI中间件模式
+- ✅ **FastAPI** - ASGI中间件模式
+- ✅ **Sanic** - 专用中间件模式 [📖详细文档](docs/sanic_integration.md)
+- ✅ **其他WSGI/ASGI框架** - 通用中间件模式
+- ✅ **Django** - WSGI中间件模式
+- ✅ **FastAPI** - ASGI中间件模式
+- ✅ **Sanic** - 专用中间件模式
+- ✅ **其他WSGI/ASGI框架** - 通用中间件模式
+- ✅ **任意函数** - 装饰器模式
 
 #### 1. Flask中间件模式（推荐）
 
@@ -87,7 +106,56 @@ def complex_calculation(data):
     return process_complex_data(data)
 ```
 
-#### 3. 环境变量配置
+#### 3. Sanic框架集成
+
+Sanic异步框架的专用集成方式：
+
+```python
+from sanic import Sanic
+from web_performance_monitor import PerformanceMonitor, Config
+
+app = Sanic("MyApp")
+
+# 配置性能监控
+config = Config(
+    threshold_seconds=0.5,
+    enable_local_file=True,
+    local_output_dir="./sanic_reports"
+)
+
+monitor = PerformanceMonitor(config)
+
+# 创建Sanic适配器
+from web_performance_monitor.adapters.sanic import SanicAdapter
+sanic_adapter = SanicAdapter(monitor)
+
+# 请求中间件 - 开始监控
+@app.middleware('request')
+async def monitor_request(request):
+    return sanic_adapter._monitor_sanic_request(request)
+
+# 响应中间件 - 完成监控
+@app.middleware('response')
+async def monitor_response(request, response):
+    sanic_adapter.process_response(request, response)
+
+@app.route('/api/users')
+async def get_users(request):
+    # 业务逻辑 - 会被自动监控
+    return json({"users": []})
+
+# 装饰器模式也支持异步函数
+@monitor.create_decorator()
+async def async_database_query(user_id):
+    # 异步数据库查询
+    await asyncio.sleep(0.1)
+    return {"id": user_id, "name": f"User {user_id}"}
+
+if __name__ == '__main__':
+    app.run(host="127.0.0.1", port=8000)
+```
+
+#### 4. 环境变量配置
 
 生产环境推荐使用环境变量配置：
 

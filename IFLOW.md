@@ -19,7 +19,9 @@
   - `pyinstrument>=4.0.0` - 性能分析引擎
   - `flask>=2.0.0` - Web 框架支持
   - `requests>=2.25.0` - HTTP 请求处理
-  - `mattermostdriver>=7.0.0` - Mattermost 通知（可选）
+- **可选依赖**:
+  - `mattermostdriver>=7.0.0` - Mattermost 通知
+  - `sanic>=21.0.0` - Sanic 框架支持
 - **开发工具**: pytest, black, flake8, mypy
 - **构建工具**: setuptools, build, twine
 
@@ -45,12 +47,23 @@ web_performance_monitor/
     ├── factory.py            # 通知器工厂
     ├── local_file.py         # 本地文件通知器
     └── mattermost.py         # Mattermost 通知器
+└── adapters/                # 框架适配器模块
+    ├── __init__.py
+    ├── base.py               # 适配器基类
+    ├── wsgi.py               # WSGI适配器（Flask、Django等）
+    ├── asgi.py               # ASGI适配器（FastAPI、Starlette等）
+    └── sanic.py              # Sanic专用适配器
 
 examples/                    # 示例代码
 ├── quick_start.py           # 5分钟快速开始
 ├── flask_middleware_example.py  # Flask 中间件示例
 ├── decorator_example.py     # 装饰器示例
 ├── production_example.py    # 生产环境配置
+├── sanic_integration.py     # Sanic框架集成示例
+├── fastapi_integration.py   # FastAPI集成示例
+├── django_integration.py    # Django集成示例
+├── tornado_integration.py   # Tornado集成示例
+├── pyramid_integration.py   # Pyramid集成示例
 └── config_examples/         # 配置示例
 
 scripts/                     # 构建和发布脚本
@@ -191,6 +204,7 @@ make bump-major
 ## 使用模式
 
 ### 1. Flask 中间件模式（推荐）
+自动监控所有 HTTP 请求，零入侵集成：
 ```python
 from flask import Flask
 from web_performance_monitor import PerformanceMonitor, Config
@@ -215,15 +229,58 @@ def get_users():
 ```
 
 ### 2. 装饰器模式
+监控特定函数，支持同步和异步函数：
+
 ```python
 from web_performance_monitor import PerformanceMonitor, Config
 
 config = Config(threshold_seconds=0.5)
 monitor = PerformanceMonitor(config)
 
+# 同步函数监控
 @monitor.create_decorator()
 def slow_database_query(user_id):
     return database.query_user_data(user_id)
+
+# 异步函数监控（Sanic、FastAPI等）
+@monitor.create_decorator()
+async def async_api_call(endpoint):
+    await asyncio.sleep(0.1)
+    return await fetch_data(endpoint)
+```
+
+### 3. Sanic框架专用模式
+针对 Sanic 异步框架的优化集成：
+
+```python
+from sanic import Sanic
+from web_performance_monitor import PerformanceMonitor, Config
+from web_performance_monitor.adapters.sanic import SanicAdapter
+
+app = Sanic("MyApp")
+
+# 配置监控
+config = Config(threshold_seconds=0.5)
+monitor = PerformanceMonitor(config)
+
+# 创建Sanic适配器
+sanic_adapter = SanicAdapter(monitor)
+
+# 应用中间件
+@app.middleware('request')
+async def monitor_request(request):
+    return sanic_adapter._monitor_sanic_request(request)
+
+@app.middleware('response')
+async def monitor_response(request, response):
+    sanic_adapter.process_response(request, response)
+
+@app.route('/api/users')
+async def get_users(request):
+    return json({"users": []})
+
+if __name__ == '__main__':
+    app.run(host="127.0.0.1", port=8000)
 ```
 
 ### 3. 环境变量配置（生产环境推荐）

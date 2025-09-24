@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "web-performance-monitor"
-version = "1.1.4"
+version = "1.2.0"
 description = "基于pyinstrument的Flask应用性能监控和告警工具"
 readme = "README.md"
 license = {text = "MIT"}
@@ -40,6 +40,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+sanic = ["sanic>=21.0.0"]
 dev = [
     "pytest>=6.0.0",
     "pytest-mock>=3.0.0",
@@ -51,6 +52,7 @@ dev = [
 ]
 all = [
     "mattermostdriver>=7.0.0",
+    "sanic>=21.0.0",
 ]
 
 [project.urls]

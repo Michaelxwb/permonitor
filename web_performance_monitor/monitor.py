@@ -109,6 +109,19 @@ class PerformanceMonitor:
         adapter = ASGIAdapter(self)
         return adapter.create_middleware()
 
+    def create_sanic_middleware(self) -> Callable:
+        """创建Sanic中间件，支持Sanic异步框架
+        
+        Returns:
+            Callable: Sanic中间件函数
+            
+        支持的框架：
+            - Sanic
+        """
+        from .adapters.sanic import SanicAdapter
+        adapter = SanicAdapter(self)
+        return adapter.create_middleware()
+
     def create_decorator(self) -> Callable:
         """创建性能监控装饰器，用于监控特定函数
 

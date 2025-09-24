@@ -62,6 +62,11 @@ class LocalFileNotifier(BaseNotifier):
             bool: 保存是否成功
         """
         try:
+            # 检查HTML报告是否有效
+            if html_report is None:
+                self.logger.warning("HTML报告为None，跳过本地文件通知")
+                return False
+                
             # 生成唯一文件名
             filename = NotificationFormatter.generate_filename(metrics, "html")
             file_path = os.path.join(self.output_dir, filename)

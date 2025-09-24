@@ -187,7 +187,7 @@ config.local.json
 test_output/
 test_reports/
 performance_reports/
-
+*reports
 # Log files
 *.log
 logs/

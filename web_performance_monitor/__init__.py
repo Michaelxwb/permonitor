@@ -1,8 +1,23 @@
 """
 Web Performance Monitor
 
-基于pyinstrument的Flask应用性能监控和告警工具
+基于pyinstrument的多框架Web应用性能监控和告警工具
+支持WSGI/ASGI框架，包括Flask、Django、FastAPI、Tornado、Pyramid等
 """
+
+from .monitor import PerformanceMonitor
+from .config import Config
+from .exceptions import PerformanceMonitorError, ConfigurationError, NotificationError, ProfilingError
+
+__version__ = "1.1.4"
+__all__ = [
+    "PerformanceMonitor", 
+    "Config", 
+    "PerformanceMonitorError", 
+    "ConfigurationError",
+    "NotificationError",
+    "ProfilingError"
+]
 
 from .monitor import PerformanceMonitor
 from .config import Config

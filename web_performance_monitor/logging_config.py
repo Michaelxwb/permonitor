@@ -95,15 +95,17 @@ class JSONLogFormatter(logging.Formatter):
 class PerformanceLogger:
     """性能监控专用日志器"""
 
-    def __init__(self, name: str = "web_performance_monitor", level: str = "INFO"):
+    def __init__(self, name: str = "web_performance_monitor", level: str = "INFO", config=None):
         """初始化性能日志器
 
         Args:
             name: 日志器名称
             level: 日志级别
+            config: 配置对象（可选）
         """
         self.logger = logging.getLogger(name)
         self.logger.setLevel(getattr(logging, level.upper()))
+        self.config = config
 
         # 避免重复添加处理器
         if not self.logger.handlers:
@@ -118,10 +120,21 @@ class PerformanceLogger:
         console_handler.setFormatter(console_formatter)
         self.logger.addHandler(console_handler)
 
-        # 文件处理器（如果配置了日志目录）
-        log_dir = os.getenv('WPM_LOG_DIR')
-        if log_dir and os.path.exists(log_dir):
-            self._setup_file_handler(log_dir)
+        # 文件处理器（优先使用配置中的local_output_dir）
+        if self.config and hasattr(self.config, 'local_output_dir') and self.config.local_output_dir:
+            # 使用配置中的local_output_dir作为日志目录
+            log_dir = self.config.local_output_dir
+            try:
+                # 如果目录不存在，尝试创建它
+                os.makedirs(log_dir, exist_ok=True)
+                self._setup_file_handler(log_dir)
+            except Exception as e:
+                self.logger.warning(f"无法创建日志目录 {log_dir}: {e}")
+        else:
+            # 后备：使用WPM_LOG_DIR环境变量
+            log_dir = os.getenv('WPM_LOG_DIR')
+            if log_dir and os.path.exists(log_dir):
+                self._setup_file_handler(log_dir)
 
     def _setup_file_handler(self, log_dir: str) -> None:
         """设置文件处理器
@@ -354,12 +367,13 @@ _performance_logger = None
 
 
 def get_performance_logger(name: str = "web_performance_monitor",
-                           level: str = "INFO") -> PerformanceLogger:
+                           level: str = "INFO", config=None) -> PerformanceLogger:
     """获取性能日志器实例
 
     Args:
         name: 日志器名称
         level: 日志级别
+        config: 配置对象（可选）
 
     Returns:
         PerformanceLogger: 性能日志器实例
@@ -367,7 +381,7 @@ def get_performance_logger(name: str = "web_performance_monitor",
     global _performance_logger
 
     if _performance_logger is None:
-        _performance_logger = PerformanceLogger(name, level)
+        _performance_logger = PerformanceLogger(name, level, config)
 
     return _performance_logger
 
@@ -381,7 +395,7 @@ def setup_logging_from_config(config) -> PerformanceLogger:
     Returns:
         PerformanceLogger: 配置好的性能日志器
     """
-    logger = get_performance_logger(level=config.log_level)
+    logger = get_performance_logger(level=config.log_level, config=config)
 
     # 记录配置加载信息
     logger.log_config_loaded("config_object", config.get_effective_config())

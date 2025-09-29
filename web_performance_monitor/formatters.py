@@ -60,20 +60,14 @@ class NotificationFormatter:
         Returns:
             str: 格式化的Mattermost消息
         """
-        return f"""#### 🚨 性能告警
-
-**接口**: `{metrics.endpoint}`
-**URL**: {metrics.request_url}
-**方法**: {metrics.request_method}
-**响应时间**: **{metrics.execution_time:.2f}秒**
-**状态码**: {metrics.status_code}
-**时间**: {metrics.timestamp.strftime('%Y-%m-%d %H:%M:%S')}
-
-**请求参数**:
-```json
-{json.dumps(metrics.request_params, ensure_ascii=False, indent=2)}
-```
-"""
+        # 表头
+        table = "| 时间 | 接口 | URL | 方法 | 响应时间 | 状态码 |\n"
+        table += "|------|------|------|------|----------|--------|\n"
+        table += f"| {metrics.timestamp.strftime('%Y-%m-%d %H:%M:%S')} | " \
+                 f"{metrics.endpoint} | {metrics.request_url} | " \
+                 f"{metrics.request_method} | **{metrics.execution_time:.2f}秒** | " \
+                 f"{metrics.status_code} |\n"
+        return f"""####  🚨 性能告警 \n {table}"""
 
     @staticmethod
     def generate_filename(metrics: PerformanceMetrics, extension: str = "html") -> str:
@@ -122,68 +116,6 @@ class NotificationFormatter:
             base_msg += f" 报告已保存至: {file_path}"
 
         return base_msg
-
-
-class MetricsFormatter:
-    """性能指标格式化器"""
-
-    @staticmethod
-    def format_execution_time(seconds: float) -> str:
-        """格式化执行时间
-
-        Args:
-            seconds: 执行时间（秒）
-
-        Returns:
-            str: 格式化的时间字符串
-        """
-        if seconds < 0.001:
-            return f"{seconds * 1000000:.0f}μs"
-        elif seconds < 1:
-            return f"{seconds * 1000:.1f}ms"
-        else:
-            return f"{seconds:.2f}s"
-
-    @staticmethod
-    def format_overhead_percentage(overhead: float) -> str:
-        """格式化性能开销百分比
-
-        Args:
-            overhead: 开销比例（0-1之间）
-
-        Returns:
-            str: 格式化的百分比字符串
-        """
-        return f"{overhead * 100:.2f}%"
-
-    @staticmethod
-    def format_metrics_table(metrics_list: list) -> str:
-        """格式化性能指标表格
-
-        Args:
-            metrics_list: 性能指标列表
-
-        Returns:
-            str: 格式化的表格字符串
-        """
-        if not metrics_list:
-            return "暂无性能数据"
-
-        # 表头
-        table = "| 时间 | 端点 | 方法 | 响应时间 | 状态码 |\n"
-        table += "|------|------|------|----------|--------|\n"
-
-        # 数据行
-        for metrics in metrics_list:
-            time_str = metrics.timestamp.strftime('%H:%M:%S')
-            endpoint = metrics.endpoint[:30] + "..." if len(
-                metrics.endpoint) > 30 else metrics.endpoint
-            time_formatted = MetricsFormatter.format_execution_time(
-                metrics.execution_time)
-
-            table += f"| {time_str} | {endpoint} | {metrics.request_method} | {time_formatted} | {metrics.status_code} |\n"
-
-        return table
 
 
 class ConfigFormatter:

@@ -61,23 +61,26 @@ class AlertManager:
                 )
                 return False
 
-            # 2. 检查URL是否在黑名单中
-            if self.config.is_url_blacklisted(metrics.request_url):
-                self.logger.info(
-                    f"跳过黑名单URL告警: {metrics.endpoint} "
-                    f"URL={metrics.request_url} 匹配黑名单规则"
-                )
-                return False
+            # 2. 检查URL白名单（优先级最高）
+            if self.config.enable_url_whitelist:
+                # 如果启用了白名单，只监控白名单中的URL
+                url_str = metrics.request_url or metrics.endpoint
+                if not self.config.is_url_whitelisted(url_str):
+                    self.logger.info(
+                        f"跳过非白名单URL告警: {url_str}，URL={url_str} 不在白名单中"
+                    )
+                    return False
 
-            # 检查endpoint是否在黑名单中（支持endpoint路径匹配）
-            if self.config.is_url_blacklisted(metrics.endpoint):
-                self.logger.info(
-                    f"跳过黑名单端点告警: {metrics.endpoint} "
-                    f"端点匹配黑名单规则"
-                )
-                return False
+            # 3. 检查URL黑名单（白名单未启用或URL已在白名单中时检查）
+            elif self.config.enable_url_blacklist:
+                url_str = metrics.request_url or metrics.endpoint
+                if self.config.is_url_blacklisted(url_str):
+                    self.logger.info(
+                        f"跳过黑名单URL告警: {url_str}，URL={url_str} 匹配黑名单规则"
+                    )
+                    return False
 
-            # 3. 检查是否重复告警
+            # 4. 检查是否重复告警
             cache_key = self.cache_manager.generate_metrics_key(metrics)
 
             if self.cache_manager.is_recently_alerted(cache_key,

@@ -43,6 +43,10 @@ class Config:
     # URL黑名单配置
     url_blacklist: list = field(default_factory=list)  # URL黑名单，支持正则表达式
     enable_url_blacklist: bool = True  # 启用URL黑名单功能
+    
+    # URL白名单配置
+    url_whitelist: list = field(default_factory=list)  # URL白名单，支持正则表达式
+    enable_url_whitelist: bool = False  # 启用URL白名单功能（默认关闭）
 
     def __post_init__(self):
         """初始化后验证配置"""
@@ -66,6 +70,8 @@ class Config:
         - WPM_LOG_LEVEL: 日志级别
         - WPM_URL_BLACKLIST: URL黑名单，多个URL用逗号分隔
         - WPM_ENABLE_URL_BLACKLIST: 启用URL黑名单功能
+        - WPM_URL_WHITELIST: URL白名单，多个URL用逗号分隔
+        - WPM_ENABLE_URL_WHITELIST: 启用URL白名单功能
 
         Returns:
             Config: 从环境变量加载的配置实例
@@ -94,7 +100,11 @@ class Config:
                 url_blacklist=cls._parse_url_blacklist(
                     os.getenv('WPM_URL_BLACKLIST', '')),
                 enable_url_blacklist=os.getenv('WPM_ENABLE_URL_BLACKLIST',
-                                               'true').lower() == 'true'
+                                               'true').lower() == 'true',
+                url_whitelist=cls._parse_url_whitelist(
+                    os.getenv('WPM_URL_WHITELIST', '')),
+                enable_url_whitelist=os.getenv('WPM_ENABLE_URL_WHITELIST',
+                                               'false').lower() == 'true'
             )
         except (ValueError, TypeError) as e:
             raise ConfigurationError(f"环境变量配置错误: {e}")
@@ -114,6 +124,23 @@ class Config:
 
         # 分割并清理空白字符
         urls = [url.strip() for url in blacklist_str.split(',') if url.strip()]
+        return urls
+
+    @staticmethod
+    def _parse_url_whitelist(whitelist_str: str) -> list:
+        """解析URL白名单字符串
+
+        Args:
+            whitelist_str: 逗号分隔的URL白名单字符串
+
+        Returns:
+            list: URL白名单列表
+        """
+        if not whitelist_str:
+            return []
+
+        # 分割并清理空白字符
+        urls = [url.strip() for url in whitelist_str.split(',') if url.strip()]
         return urls
 
     @classmethod
@@ -253,6 +280,24 @@ class Config:
                 logger.warning("所有URL黑名单模式都无效，已禁用黑名单功能")
                 self.enable_url_blacklist = False
 
+        # 验证URL白名单
+        if self.enable_url_whitelist and self.url_whitelist:
+            # 验证正则表达式的有效性
+            valid_patterns = []
+            for pattern in self.url_whitelist:
+                try:
+                    re.compile(pattern)
+                    valid_patterns.append(pattern)
+                except re.error as e:
+                    logger.warning(f"无效的URL白名单正则表达式，已跳过: {pattern} - {e}")
+
+            self.url_whitelist = valid_patterns
+            if valid_patterns:
+                logger.info(f"URL白名单已启用，包含 {len(valid_patterns)} 个模式")
+            else:
+                logger.warning("所有URL白名单模式都无效，已禁用白名单功能")
+                self.enable_url_whitelist = False
+
     def get_effective_config(self) -> Dict[str, Any]:
         """获取生效的配置信息
 
@@ -273,7 +318,9 @@ class Config:
             'mattermost_max_retries': self.mattermost_max_retries,
             'log_level': self.log_level,
             'url_blacklist': self.url_blacklist,
-            'enable_url_blacklist': self.enable_url_blacklist
+            'enable_url_blacklist': self.enable_url_blacklist,
+            'url_whitelist': self.url_whitelist,
+            'enable_url_whitelist': self.enable_url_whitelist
         }
 
         # 脱敏处理
@@ -303,7 +350,9 @@ class Config:
             'mattermost_max_retries': self.mattermost_max_retries,
             'log_level': self.log_level,
             'url_blacklist': self.url_blacklist,
-            'enable_url_blacklist': self.enable_url_blacklist
+            'enable_url_blacklist': self.enable_url_blacklist,
+            'url_whitelist': self.url_whitelist,
+            'enable_url_whitelist': self.enable_url_whitelist
         }
 
     def is_url_blacklisted(self, url: str) -> bool:
@@ -325,6 +374,30 @@ class Config:
                 # 如果正则表达式有问题，跳过这个模式
                 continue
 
+        return False
+
+    def is_url_whitelisted(self, url: str) -> bool:
+        """检查URL是否在白名单中
+        
+        如果启用了白名单功能，只有白名单中的URL才会被监控
+        
+        Args:
+            url: 要检查的URL
+            
+        Returns:
+            bool: 是否在白名单中（白名单未启用时返回True）
+        """
+        if not self.enable_url_whitelist or not self.url_whitelist:
+            return True  # 白名单未启用时，所有URL都视为在白名单中
+            
+        for pattern in self.url_whitelist:
+            try:
+                if re.search(pattern, url):
+                    return True
+            except re.error:
+                # 如果正则表达式有问题，跳过这个模式
+                continue
+                
         return False
 
     def add_blacklist_url(self, url_pattern: str) -> bool:
@@ -358,6 +431,41 @@ class Config:
         """
         try:
             self.url_blacklist.remove(url_pattern)
+            return True
+        except ValueError:
+            return False
+
+    def add_whitelist_url(self, url_pattern: str) -> bool:
+        """添加URL到白名单
+
+        Args:
+            url_pattern: URL模式（支持正则表达式）
+
+        Returns:
+            bool: 是否添加成功
+        """
+        try:
+            # 验证正则表达式
+            re.compile(url_pattern)
+
+            if url_pattern not in self.url_whitelist:
+                self.url_whitelist.append(url_pattern)
+                return True
+            return False
+        except re.error:
+            return False
+
+    def remove_whitelist_url(self, url_pattern: str) -> bool:
+        """从白名单中移除URL
+
+        Args:
+            url_pattern: URL模式
+
+        Returns:
+            bool: 是否移除成功
+        """
+        try:
+            self.url_whitelist.remove(url_pattern)
             return True
         except ValueError:
             return False

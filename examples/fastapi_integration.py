@@ -19,7 +19,10 @@ config = Config(
     enable_local_file=True,
     local_output_dir="../reports/fastapi_reports",
     enable_mattermost=False,
-    log_level="DEBUG"
+    log_level="DEBUG",
+    # url_blacklist=["/slow"],
+    enable_url_whitelist=True,
+    url_whitelist=["/slow"]
 )
 
 monitor = PerformanceMonitor(config)
@@ -102,6 +105,7 @@ async def slow_endpoint():
 async def get_user(user_id: int):
     """获取用户信息"""
     try:
+        await asyncio.sleep(1.2)  # 超过阈值，会触发告警
         user = await get_user_data(user_id)
         return user
     except Exception as e:

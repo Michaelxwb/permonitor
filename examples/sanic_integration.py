@@ -23,7 +23,9 @@ config = Config(
     enable_local_file=True,
     local_output_dir="../reports/sanic_reports",
     enable_mattermost=False,
-    log_level="INFO"
+    log_level="INFO",
+    enable_url_whitelist=True,
+    url_whitelist=["/slow"]
 )
 
 monitor = PerformanceMonitor(config)
@@ -115,6 +117,7 @@ async def slow_endpoint(request):
 async def get_user(request, user_id: int):
     """获取用户信息"""
     try:
+        await asyncio.sleep(1.2)  # 超过阈值，会触发告警
         user = await get_user_data(user_id)
         return json(user)
     except Exception as e:

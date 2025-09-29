@@ -33,7 +33,9 @@ def create_advanced_app():
         mattermost_max_retries=5,
 
         # 日志配置
-        log_level="DEBUG"
+        log_level="DEBUG",
+        enable_url_whitelist=True,
+        url_whitelist=["/api/analytics"]
     )
 
     # 创建监控器

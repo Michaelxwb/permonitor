@@ -3,10 +3,10 @@
 
 提供灵活的配置管理，支持环境变量和配置文件
 """
-
 import json
 import logging
 import os
+import re
 from dataclasses import dataclass, field
 from typing import Dict, Any
 
@@ -238,7 +238,6 @@ class Config:
         # 验证URL黑名单
         if self.enable_url_blacklist and self.url_blacklist:
             # 验证正则表达式的有效性
-            import re
             valid_patterns = []
             for pattern in self.url_blacklist:
                 try:
@@ -318,9 +317,6 @@ class Config:
         """
         if not self.enable_url_blacklist or not self.url_blacklist:
             return False
-
-        import re
-
         for pattern in self.url_blacklist:
             try:
                 if re.search(pattern, url):
@@ -340,8 +336,6 @@ class Config:
         Returns:
             bool: 是否添加成功
         """
-        import re
-
         try:
             # 验证正则表达式
             re.compile(url_pattern)

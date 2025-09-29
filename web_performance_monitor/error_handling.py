@@ -3,9 +3,10 @@
 
 提供全面的错误处理和恢复机制
 """
-
 import functools
 import logging
+import random
+import time
 import traceback
 from datetime import datetime
 from typing import Callable, Any, Dict, List
@@ -232,8 +233,6 @@ class CircuitBreaker:
         """检查是否应该尝试重置断路器"""
         if self.last_failure_time is None:
             return True
-
-        import time
         return time.time() - self.last_failure_time >= self.recovery_timeout
 
     def _on_success(self) -> None:
@@ -246,8 +245,6 @@ class CircuitBreaker:
 
     def _on_failure(self) -> None:
         """失败时的处理"""
-        import time
-
         self.failure_count += 1
         self.last_failure_time = time.time()
 
@@ -302,9 +299,6 @@ class RetryManager:
         Raises:
             Exception: 所有重试都失败时抛出最后一个异常
         """
-        import time
-        import random
-
         last_exception = None
 
         for attempt in range(self.max_retries + 1):

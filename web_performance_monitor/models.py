@@ -46,7 +46,6 @@ class PerformanceMetrics:
         """
         # 解析时间戳
         if isinstance(data.get('timestamp'), str):
-            from datetime import datetime
             timestamp = datetime.fromisoformat(data['timestamp'])
         else:
             timestamp = data.get('timestamp', datetime.now())
@@ -74,7 +73,7 @@ class PerformanceMetrics:
     def get_cache_key(self) -> str:
         """生成缓存键
 
-        基于端点、URL和参数生成唯一的缓存键
+        基于端点生成唯一的缓存键
 
         Returns:
             str: 缓存键
@@ -84,9 +83,7 @@ class PerformanceMetrics:
 
         # 创建包含关键信息的字符串
         key_data = {
-            'endpoint': self.endpoint,
-            'request_url': self.request_url,
-            'request_params': self.request_params
+            'endpoint': self.endpoint
         }
 
         key_string = json.dumps(key_data, sort_keys=True, ensure_ascii=False)

@@ -3,10 +3,11 @@
 
 提供多种Web框架的监控集成和装饰器两种监控模式
 """
-
-import time
 import asyncio
 import functools
+import io
+import json
+import time
 from datetime import datetime
 from typing import Callable, Any
 from urllib.parse import parse_qs
@@ -55,10 +56,10 @@ class PerformanceMonitor:
 
     def create_middleware(self) -> Callable:
         """创建WSGI中间件，兼容所有WSGI框架（Flask、Django、Pyramid等）
-        
+
         Returns:
             Callable: WSGI中间件函数
-            
+
         Note:
             这是create_wsgi_middleware的别名，为了向后兼容
         """
@@ -78,10 +79,10 @@ class PerformanceMonitor:
 
     def create_wsgi_middleware(self) -> Callable:
         """创建通用WSGI中间件，支持所有WSGI兼容框架
-        
+
         Returns:
             Callable: WSGI中间件函数
-            
+
         支持的框架：
             - Flask
             - Django
@@ -95,10 +96,10 @@ class PerformanceMonitor:
 
     def create_asgi_middleware(self) -> Callable:
         """创建ASGI中间件，支持异步Web框架
-        
+
         Returns:
             Callable: ASGI中间件函数
-            
+
         支持的框架：
             - FastAPI
             - Starlette
@@ -111,10 +112,10 @@ class PerformanceMonitor:
 
     def create_sanic_middleware(self) -> Callable:
         """创建Sanic中间件，支持Sanic异步框架
-        
+
         Returns:
             Callable: Sanic中间件函数
-            
+
         支持的框架：
             - Sanic
         """
@@ -143,7 +144,7 @@ class PerformanceMonitor:
                 return await self._monitor_async_function(func, *args, **kwargs)
 
             # 根据函数类型选择合适的包装器
-            import asyncio
+
             if asyncio.iscoroutinefunction(func):
                 return async_wrapper
             else:
@@ -364,20 +365,19 @@ class PerformanceMonitor:
             content_type = environ.get('CONTENT_TYPE', '')
             content_length = int(environ.get('CONTENT_LENGTH', 0))
 
-            if method in ['POST', 'PUT',
-                          'PATCH'] and content_length > 0 and content_length < 10240:  # 限制大小10KB
+            if method in ['POST', 'PUT', 'PATCH'] and \
+                content_length > 0 and content_length < 10240:  # 限制大小10KB
                 try:
                     # 读取请求体数据
                     post_data = environ['wsgi.input'].read(content_length)
 
                     # 重置输入流，确保应用能正常读取
-                    import io
                     environ['wsgi.input'] = io.BytesIO(post_data)
 
                     # 根据Content-Type解析数据
                     if 'application/json' in content_type:
                         # JSON数据
-                        import json
+
                         try:
                             json_data = json.loads(post_data.decode('utf-8'))
                             params['json_body'] = json_data
@@ -561,7 +561,7 @@ class PerformanceMonitor:
                 status_code=status_code,
                 profiler_data=html_report
             )
-            
+
             # 创建性能指标
             metrics = PerformanceMetrics(
                 endpoint=info['endpoint'],

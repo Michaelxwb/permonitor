@@ -7,6 +7,7 @@ import io
 import logging
 import time
 from typing import TYPE_CHECKING, Optional
+from urllib.parse import urlparse
 
 from .base import BaseNotifier
 from ..exceptions import NotificationError
@@ -65,7 +66,6 @@ class MattermostNotifier(BaseNotifier):
         if self._driver is None or not self._authenticated:
             try:
                 # 解析URL以获取正确的配置
-                from urllib.parse import urlparse
                 parsed_url = urlparse(self.server_url)
 
                 # 确保URL格式正确
